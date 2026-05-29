@@ -71,17 +71,29 @@ class TrendController extends Controller
         $weekend  = [];
         $weekday  = [];
         for ($m = 1; $m <= 12; $m++) {
-            // SQLite: strftime('%w') returns 0=Sunday, 6=Saturday
+            $driver = DB::connection()->getDriverName();
+            
+            if ($driver === 'sqlite') {
+                $wendRaw = "strftime('%w', tgl_checkin) IN ('0', '6')";
+                $wdayRaw = "strftime('%w', tgl_checkin) NOT IN ('0', '6')";
+            } elseif ($driver === 'pgsql') {
+                $wendRaw = "EXTRACT(DOW FROM tgl_checkin) IN (0, 6)";
+                $wdayRaw = "EXTRACT(DOW FROM tgl_checkin) NOT IN (0, 6)";
+            } else { // MySQL
+                $wendRaw = "DAYOFWEEK(tgl_checkin) IN (1, 7)";
+                $wdayRaw = "DAYOFWEEK(tgl_checkin) NOT IN (1, 7)";
+            }
+
             $wend = Booking::whereIn('status', ['confirmed','completed'])
                         ->whereYear('tgl_checkin', now()->year)
                         ->whereMonth('tgl_checkin', $m)
-                        ->whereRaw("strftime('%w', tgl_checkin) IN ('0', '6')")
+                        ->whereRaw($wendRaw)
                         ->count();
 
             $wday = Booking::whereIn('status', ['confirmed','completed'])
                         ->whereYear('tgl_checkin', now()->year)
                         ->whereMonth('tgl_checkin', $m)
-                        ->whereRaw("strftime('%w', tgl_checkin) NOT IN ('0', '6')")
+                        ->whereRaw($wdayRaw)
                         ->count();
 
             $weekend[]  = $wend;

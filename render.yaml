@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: nusantara-hospitality-group
+    env: php
+    buildCommand: "./render-build.sh"
+    startCommand: "php artisan serve --host=0.0.0.0 --port=$PORT"
+    envVars:
+      - key: APP_NAME
+        value: Nusantara Hospitality Group
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nhg-db
+          property: connectionString
+      - key: APP_URL
+        fromService:
+          type: web
+          name: nusantara-hospitality-group
+          property: host
+
+databases:
+  - name: nhg-db
+    databaseName: nhg_db
+    user: nhg_user
