@@ -12,9 +12,6 @@
       <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--purple-light);">
         {{ $booking->kode_booking }}
       </div>
-      <div style="font-size:0.82rem;color:var(--text-muted);">
-        Dibuat: {{ $booking->created_at->format('d M Y H:i') }}
-      </div>
     </div>
     <div style="display:flex;gap:0.75rem;align-items:center;">
       @if($booking->status === 'confirmed')
@@ -26,7 +23,7 @@
       @else
         <span class="badge badge-danger">✗ Cancelled</span>
       @endif
-      <a href="{{ route('admin.bookings.edit', $booking->id) }}" class="btn btn-primary btn-sm">
+      <a href="{{ route('admin.bookings.edit', $booking->reservation_key) }}" class="btn btn-primary btn-sm">
         ✏️ Edit
       </a>
       <a href="{{ route('admin.bookings.index') }}" class="btn btn-outline btn-sm">← Kembali</a>
@@ -81,8 +78,8 @@
       <div class="chart-title" style="margin-bottom:1rem;">📅 Info Menginap</div>
       <div style="display:flex;flex-direction:column;gap:0.75rem;">
         @foreach([
-          ['Check-in',$booking->tgl_checkin->format('d M Y')],
-          ['Check-out',$booking->tgl_checkout->format('d M Y')],
+          ['Check-in',$booking->tgl_checkin ? $booking->tgl_checkin->format('d M Y') : '-'],
+          ['Check-out',$booking->tgl_checkout ? $booking->tgl_checkout->format('d M Y') : '-'],
           ['Jumlah Malam',$booking->jml_malam . ' malam'],
           ['Jumlah Tamu',$booking->jml_tamu . ' orang'],
         ] as [$label,$val])
@@ -125,10 +122,10 @@
 
   {{-- Actions --}}
   <div style="margin-top:1.5rem;display:flex;gap:0.75rem;">
-    <a href="{{ route('admin.bookings.edit', $booking->id) }}" class="btn btn-primary">
+    <a href="{{ route('admin.bookings.edit', $booking->reservation_key) }}" class="btn btn-primary">
       ✏️ Edit Booking
     </a>
-    <form method="POST" action="{{ route('admin.bookings.destroy', $booking->id) }}"
+    <form method="POST" action="{{ route('admin.bookings.destroy', $booking->reservation_key) }}"
       onsubmit="return confirm('Hapus booking ini?')">
       @csrf @method('DELETE')
       <button type="submit" class="btn btn-outline"

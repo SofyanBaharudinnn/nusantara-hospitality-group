@@ -26,7 +26,7 @@
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <span class="badge badge-purple">
-          {{ $user->role === 'admin' ? '🔑 Admin' : '👤 Staff' }}
+          {{ $user->role === 'admin' ? '🔑 Admin' : '👤 User' }}
         </span>
         <span class="badge badge-success" style="font-size:0.65rem;">● Online</span>
         <span class="badge" style="background:rgba(34,211,238,0.1);color:var(--accent-cyan);border:1px solid rgba(34,211,238,0.2);font-size:0.65rem;">

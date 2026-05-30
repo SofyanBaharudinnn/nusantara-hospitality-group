@@ -11,30 +11,30 @@
     <div class="alert alert-error" style="margin-bottom:1.5rem;">❌ {{ $errors->first() }}</div>
     @endif
 
-    <form method="POST" action="{{ route('admin.hotels.update', $hotel->id) }}">
+    <form method="POST" action="{{ route('admin.hotels.update', $hotel->hotel_key) }}">
       @csrf @method('PUT')
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
 
         <div class="form-group" style="grid-column:span 2;">
           <label class="form-label">Nama Properti *</label>
-          <input type="text" name="nama" class="form-input" value="{{ $hotel->nama }}" required>
+          <input type="text" name="hotel_name" class="form-input" value="{{ $hotel->hotel_name }}" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">Tipe *</label>
-          <select name="tipe" class="form-input" required>
+          <select name="hotel_type" class="form-input" required>
             @foreach(['hotel','resort','restoran'] as $t)
-            <option value="{{ $t }}" {{ $hotel->tipe===$t?'selected':'' }}>{{ ucfirst($t) }}</option>
+            <option value="{{ $t }}" {{ $hotel->hotel_type === $t ? 'selected':'' }}>{{ ucfirst($t) }}</option>
             @endforeach
           </select>
         </div>
 
         <div class="form-group">
           <label class="form-label">Bintang *</label>
-          <select name="bintang" class="form-input" required>
+          <select name="star_rating" class="form-input" required>
             @foreach([1,2,3,4,5] as $b)
-            <option value="{{ $b }}" {{ $hotel->bintang==$b?'selected':'' }}>
+            <option value="{{ $b }}" {{ $hotel->star_rating == $b ? 'selected':'' }}>
               {{ str_repeat('★',$b) }} ({{ $b }} bintang)
             </option>
             @endforeach
@@ -43,7 +43,7 @@
 
         <div class="form-group">
           <label class="form-label">Kota *</label>
-          <input type="text" name="kota" class="form-input" value="{{ $hotel->kota }}" required>
+          <input type="text" name="city" class="form-input" value="{{ $hotel->city }}" required>
         </div>
 
         <div class="form-group">
@@ -84,7 +84,7 @@
 
       <div style="display:flex;gap:0.75rem;margin-top:1rem;">
         <button type="submit" class="btn btn-primary">💾 Update Properti</button>
-        <a href="{{ route('admin.hotels.show', $hotel->id) }}" class="btn btn-outline">Batal</a>
+        <a href="{{ route('admin.hotels.show', $hotel->hotel_key) }}" class="btn btn-outline">Batal</a>
       </div>
     </form>
   </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class UserManageController extends Controller
 {
@@ -38,7 +39,7 @@ class UserManageController extends Controller
 
     public function destroy(User $user)
     {
-        if ($user->id === auth()->id()) {
+        if ($user->id === Auth::id()) {
             return back()->with('error', 'Tidak bisa menghapus akun sendiri.');
         }
 

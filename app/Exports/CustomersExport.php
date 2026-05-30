@@ -22,7 +22,10 @@ class CustomersExport implements
 {
     public function collection()
     {
-        return Customer::orderByDesc('total_spending')->get();
+        return Customer::withSum('reservations', 'room_revenue')
+            ->withCount('reservations')
+            ->orderByDesc('reservations_sum_room_revenue')
+            ->get();
     }
 
     public function headings(): array
@@ -43,10 +46,10 @@ class CustomersExport implements
             ucfirst($c->segmen),
             $c->negara,
             $c->kota_asal ?? '-',
-            $c->tgl_lahir ? $c->tgl_lahir->format('d/m/Y') : '-',
+            $c->tgl_lahir ? (is_string($c->tgl_lahir) ? $c->tgl_lahir : $c->tgl_lahir->format('d/m/Y')) : '-',
             ucfirst($c->tier),
-            $c->total_kunjungan,
-            $c->total_spending,
+            $c->reservations_count ?? 0,
+            $c->reservations_sum_room_revenue ?? 0,
         ];
     }
 

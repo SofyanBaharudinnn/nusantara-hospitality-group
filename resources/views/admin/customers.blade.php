@@ -51,7 +51,10 @@
 <div class="chart-wrap animate-fade-up delay-4">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
     <div class="chart-title">Top Tamu Berdasarkan CLV</div>
-    <button class="btn btn-outline btn-sm">📥 Export</button>
+    <div style="display:flex;gap:0.5rem;">
+      <a href="{{ route('admin.export.excel.customers') }}" class="btn btn-outline btn-sm" style="color:#4ade80;border-color:rgba(74,222,128,0.3);">📊 Excel</a>
+      <a href="{{ route('admin.export.pdf.customers') }}" class="btn btn-outline btn-sm" style="color:#f87171;border-color:rgba(248,113,113,0.3);">📄 PDF</a>
+    </div>
   </div>
   <div style="overflow-x:auto;">
     <table class="data-table">

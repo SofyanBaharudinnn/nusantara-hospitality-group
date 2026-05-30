@@ -19,7 +19,7 @@
     </div>
   </div>
   <div style="display:flex;gap:0.75rem;">
-    <a href="{{ route('admin.hotels.edit', $hotel->id) }}" class="btn btn-primary btn-sm">✏️ Edit</a>
+    <a href="{{ route('admin.hotels.edit', $hotel->hotel_key) }}" class="btn btn-primary btn-sm">✏️ Edit</a>
     <a href="{{ route('admin.hotels.index') }}" class="btn btn-outline btn-sm">← Kembali</a>
   </div>
 </div>

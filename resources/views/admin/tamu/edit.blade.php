@@ -11,14 +11,14 @@
     <div class="alert alert-error" style="margin-bottom:1.5rem;">❌ {{ $errors->first() }}</div>
     @endif
 
-    <form method="POST" action="{{ route('admin.tamu.update', $tamu->id) }}">
+    <form method="POST" action="{{ route('admin.tamu.update', $tamu->guest_key) }}">
       @csrf @method('PUT')
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
 
         <div class="form-group" style="grid-column:span 2;">
           <label class="form-label">Nama Lengkap *</label>
-          <input type="text" name="nama" class="form-input" value="{{ $tamu->nama }}" required>
+          <input type="text" name="guest_name" class="form-input" value="{{ $tamu->guest_name }}" required>
         </div>
 
         <div class="form-group">
@@ -33,7 +33,7 @@
 
         <div class="form-group">
           <label class="form-label">Segmen *</label>
-          <select name="segmen" class="form-input" required>
+          <select name="segment" class="form-input" required>
             @foreach(['vip','corporate','leisure','group'] as $s)
             <option value="{{ $s }}" {{ $tamu->segmen===$s?'selected':'' }}>{{ ucfirst($s) }}</option>
             @endforeach
@@ -51,12 +51,12 @@
 
         <div class="form-group">
           <label class="form-label">Negara *</label>
-          <input type="text" name="negara" class="form-input" value="{{ $tamu->negara }}" required>
+          <input type="text" name="nationality" class="form-input" value="{{ $tamu->nationality }}" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">Kota Asal</label>
-          <input type="text" name="kota_asal" class="form-input" value="{{ $tamu->kota_asal }}">
+          <input type="text" name="city" class="form-input" value="{{ $tamu->city }}">
         </div>
 
         <div class="form-group">
@@ -69,7 +69,7 @@
 
       <div style="display:flex;gap:0.75rem;margin-top:1rem;">
         <button type="submit" class="btn btn-primary">💾 Update Tamu</button>
-        <a href="{{ route('admin.tamu.show', $tamu->id) }}" class="btn btn-outline">Batal</a>
+        <a href="{{ route('admin.tamu.show', $tamu->guest_key) }}" class="btn btn-outline">Batal</a>
       </div>
     </form>
   </div>

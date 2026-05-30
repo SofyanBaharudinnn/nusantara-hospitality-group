@@ -22,7 +22,7 @@
       </div>
     </div>
     <div style="display:flex;gap:0.75rem;">
-      <a href="{{ route('admin.tamu.edit', $tamu->id) }}" class="btn btn-primary btn-sm">✏️ Edit</a>
+      <a href="{{ route('admin.tamu.edit', $tamu->guest_key) }}" class="btn btn-primary btn-sm">✏️ Edit</a>
       <a href="{{ route('admin.tamu.index') }}" class="btn btn-outline btn-sm">← Kembali</a>
     </div>
   </div>

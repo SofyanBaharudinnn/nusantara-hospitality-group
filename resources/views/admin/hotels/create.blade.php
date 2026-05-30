@@ -18,25 +18,25 @@
 
         <div class="form-group" style="grid-column:span 2;">
           <label class="form-label">Nama Properti *</label>
-          <input type="text" name="nama" class="form-input"
-            placeholder="NHG Jakarta" value="{{ old('nama') }}" required>
+          <input type="text" name="hotel_name" class="form-input"
+            placeholder="NHG Jakarta" value="{{ old('hotel_name') }}" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">Tipe *</label>
-          <select name="tipe" class="form-input" required>
+          <select name="hotel_type" class="form-input" required>
             <option value="">-- Pilih Tipe --</option>
             @foreach(['hotel','resort','restoran'] as $t)
-            <option value="{{ $t }}" {{ old('tipe')===$t ? 'selected':'' }}>{{ ucfirst($t) }}</option>
+            <option value="{{ $t }}" {{ old('hotel_type') === $t ? 'selected':'' }}>{{ ucfirst($t) }}</option>
             @endforeach
           </select>
         </div>
 
         <div class="form-group">
           <label class="form-label">Bintang *</label>
-          <select name="bintang" class="form-input" required>
+          <select name="star_rating" class="form-input" required>
             @foreach([1,2,3,4,5] as $b)
-            <option value="{{ $b }}" {{ old('bintang',4)==$b ? 'selected':'' }}>
+            <option value="{{ $b }}" {{ old('star_rating', 4) == $b ? 'selected':'' }}>
               {{ str_repeat('★',$b) }} ({{ $b }} bintang)
             </option>
             @endforeach
@@ -45,8 +45,8 @@
 
         <div class="form-group">
           <label class="form-label">Kota *</label>
-          <input type="text" name="kota" class="form-input"
-            placeholder="Jakarta" value="{{ old('kota') }}" required>
+          <input type="text" name="city" class="form-input"
+            placeholder="Jakarta" value="{{ old('city') }}" required>
         </div>
 
         <div class="form-group">

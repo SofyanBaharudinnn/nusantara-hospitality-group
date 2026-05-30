@@ -160,6 +160,7 @@ body::before {
 }
 .form-input:focus { border-color: var(--purple-core); background: rgba(124,58,237,0.06); box-shadow: 0 0 0 3px rgba(124,58,237,0.15); }
 .form-input::placeholder { color: var(--text-muted); }
+select.form-input option { background-color: var(--bg-card); color: var(--text-primary); }
 
 .navbar {
   position: fixed;

@@ -13,16 +13,16 @@
     </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.bookings.update', $booking->id) }}">
+    <form method="POST" action="{{ route('admin.bookings.update', $booking->reservation_key) }}">
       @csrf @method('PUT')
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
 
         <div class="form-group">
           <label class="form-label">Properti / Hotel *</label>
-          <select name="hotel_id" class="form-input" required>
+          <select name="hotel_key" class="form-input" disabled>
             @foreach($hotels as $h)
-            <option value="{{ $h->id }}" {{ $booking->hotel_id==$h->id ? 'selected' : '' }}>
+            <option value="{{ $h->hotel_key }}" {{ $booking->hotel_key==$h->hotel_key ? 'selected' : '' }}>
               {{ $h->nama }}
             </option>
             @endforeach
@@ -31,9 +31,9 @@
 
         <div class="form-group">
           <label class="form-label">Kamar *</label>
-          <select name="room_id" class="form-input" required>
+          <select name="room_key" class="form-input" disabled>
             @foreach($rooms as $r)
-            <option value="{{ $r->id }}" {{ $booking->room_id==$r->id ? 'selected' : '' }}>
+            <option value="{{ $r->room_key }}" {{ $booking->room_key==$r->room_key ? 'selected' : '' }}>
               {{ $r->nomor_kamar }} — {{ ucfirst($r->tipe) }}
               (Rp {{ number_format($r->harga_dasar,0,',','.') }}/malam)
             </option>
@@ -43,9 +43,9 @@
 
         <div class="form-group">
           <label class="form-label">Tamu *</label>
-          <select name="customer_id" class="form-input" required>
+          <select name="guest_key" class="form-input" disabled>
             @foreach($customers as $c)
-            <option value="{{ $c->id }}" {{ $booking->customer_id==$c->id ? 'selected' : '' }}>
+            <option value="{{ $c->guest_key }}" {{ $booking->guest_key==$c->guest_key ? 'selected' : '' }}>
               {{ $c->nama }} — {{ $c->email }}
             </option>
             @endforeach
@@ -54,9 +54,9 @@
 
         <div class="form-group">
           <label class="form-label">Channel *</label>
-          <select name="channel_id" class="form-input" required>
+          <select name="channel_key" class="form-input" disabled>
             @foreach($channels as $c)
-            <option value="{{ $c->id }}" {{ $booking->channel_id==$c->id ? 'selected' : '' }}>
+            <option value="{{ $c->channel_key }}" {{ $booking->channel_key==$c->channel_key ? 'selected' : '' }}>
               {{ $c->nama }}
             </option>
             @endforeach
@@ -65,30 +65,27 @@
 
         <div class="form-group">
           <label class="form-label">Tanggal Check-in *</label>
-          <input type="date" name="tgl_checkin" class="form-input"
-            value="{{ $booking->tgl_checkin->format('Y-m-d') }}" required>
+          <input type="date" class="form-input" disabled
+            value="{{ $booking->tgl_checkin ? $booking->tgl_checkin->format('Y-m-d') : '' }}">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Tanggal Check-out *</label>
-          <input type="date" name="tgl_checkout" class="form-input"
-            value="{{ $booking->tgl_checkout->format('Y-m-d') }}" required>
+          <label class="form-label">Jumlah Malam *</label>
+          <input type="number" name="nights" class="form-input"
+            value="{{ $booking->nights }}" min="1" required>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Jumlah Tamu *</label>
-          <input type="number" name="jml_tamu" class="form-input"
-            value="{{ $booking->jml_tamu }}" min="1" required>
+          <label class="form-label">Jumlah Kamar Dipesan *</label>
+          <input type="number" name="rooms_booked" class="form-input"
+            value="{{ $booking->rooms_booked }}" min="1" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">Status *</label>
-          <select name="status" class="form-input" required>
-            @foreach(['confirmed','pending','cancelled','completed'] as $s)
-            <option value="{{ $s }}" {{ $booking->status===$s ? 'selected' : '' }}>
-              {{ ucfirst($s) }}
-            </option>
-            @endforeach
+          <select name="is_cancelled" class="form-input" required>
+            <option value="No" {{ $booking->is_cancelled==='No' ? 'selected' : '' }}>Confirmed</option>
+            <option value="Yes" {{ $booking->is_cancelled==='Yes' ? 'selected' : '' }}>Cancelled</option>
           </select>
         </div>
 
@@ -118,7 +115,7 @@
 
       <div style="display:flex;gap:0.75rem;margin-top:1rem;">
         <button type="submit" class="btn btn-primary">💾 Update Booking</button>
-        <a href="{{ route('admin.bookings.show', $booking->id) }}" class="btn btn-outline">Batal</a>
+        <a href="{{ route('admin.bookings.show', $booking->reservation_key) }}" class="btn btn-outline">Batal</a>
       </div>
     </form>
   </div>

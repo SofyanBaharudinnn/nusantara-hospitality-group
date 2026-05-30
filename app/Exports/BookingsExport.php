@@ -35,11 +35,20 @@ class BookingsExport implements
     public function collection()
     {
         $query = Booking::with(['hotel','room','customer','channel'])
-                    ->orderBy('tgl_checkin', 'desc');
+                    ->orderBy('reservation_key', 'desc');
 
-        if ($this->hotelId) $query->where('hotel_id', $this->hotelId);
-        if ($this->status)  $query->where('status', $this->status);
-        if ($this->year)    $query->whereYear('tgl_checkin', $this->year);
+        if ($this->hotelId) {
+            $query->where('hotel_key', $this->hotelId);
+        }
+        
+        if ($this->status) {
+            $isCancelled = $this->status === 'cancelled' ? 'Yes' : 'No';
+            $query->where('is_cancelled', $isCancelled);
+        }
+        
+        if ($this->year) {
+            $query->whereBetween('date_key', [(int)($this->year . '0101'), (int)($this->year . '1231')]);
+        }
 
         return $query->get();
     }

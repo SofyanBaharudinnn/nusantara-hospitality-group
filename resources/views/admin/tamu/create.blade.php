@@ -18,8 +18,8 @@
 
         <div class="form-group" style="grid-column:span 2;">
           <label class="form-label">Nama Lengkap *</label>
-          <input type="text" name="nama" class="form-input"
-            placeholder="Budi Santoso" value="{{ old('nama') }}" required>
+          <input type="text" name="guest_name" class="form-input"
+            placeholder="Budi Santoso" value="{{ old('guest_name') }}" required>
         </div>
 
         <div class="form-group">
@@ -36,10 +36,10 @@
 
         <div class="form-group">
           <label class="form-label">Segmen *</label>
-          <select name="segmen" class="form-input" required>
+          <select name="segment" class="form-input" required>
             <option value="">-- Pilih Segmen --</option>
             @foreach(['vip','corporate','leisure','group'] as $s)
-            <option value="{{ $s }}" {{ old('segmen')===$s?'selected':'' }}>{{ ucfirst($s) }}</option>
+            <option value="{{ $s }}" {{ old('segment')===$s?'selected':'' }}>{{ ucfirst($s) }}</option>
             @endforeach
           </select>
         </div>
@@ -56,14 +56,14 @@
 
         <div class="form-group">
           <label class="form-label">Negara *</label>
-          <input type="text" name="negara" class="form-input"
-            placeholder="Indonesia" value="{{ old('negara','Indonesia') }}" required>
+          <input type="text" name="nationality" class="form-input"
+            placeholder="Indonesia" value="{{ old('nationality','Indonesia') }}" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">Kota Asal</label>
-          <input type="text" name="kota_asal" class="form-input"
-            placeholder="Jakarta" value="{{ old('kota_asal') }}">
+          <input type="text" name="city" class="form-input"
+            placeholder="Jakarta" value="{{ old('city') }}">
         </div>
 
         <div class="form-group">

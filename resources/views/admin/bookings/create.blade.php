@@ -20,11 +20,11 @@
 
         <div class="form-group">
           <label class="form-label">Properti / Hotel *</label>
-          <select name="hotel_id" id="hotelSelect" class="form-input" required
+          <select name="hotel_key" id="hotelSelect" class="form-input" required
             onchange="loadRooms(this.value)">
             <option value="">-- Pilih Hotel --</option>
             @foreach($hotels as $h)
-            <option value="{{ $h->id }}" {{ old('hotel_id')==$h->id ? 'selected' : '' }}>
+            <option value="{{ $h->hotel_key }}" {{ old('hotel_key')==$h->hotel_key ? 'selected' : '' }}>
               {{ $h->nama }}
             </option>
             @endforeach
@@ -33,17 +33,17 @@
 
         <div class="form-group">
           <label class="form-label">Kamar *</label>
-          <select name="room_id" id="roomSelect" class="form-input" required>
+          <select name="room_key" id="roomSelect" class="form-input" required>
             <option value="">-- Pilih Hotel dulu --</option>
           </select>
         </div>
 
         <div class="form-group">
           <label class="form-label">Tamu *</label>
-          <select name="customer_id" class="form-input" required>
+          <select name="guest_key" class="form-input" required>
             <option value="">-- Pilih Tamu --</option>
             @foreach($customers as $c)
-            <option value="{{ $c->id }}" {{ old('customer_id')==$c->id ? 'selected' : '' }}>
+            <option value="{{ $c->guest_key }}" {{ old('guest_key')==$c->guest_key ? 'selected' : '' }}>
               {{ $c->nama }} — {{ $c->email }}
             </option>
             @endforeach
@@ -52,10 +52,10 @@
 
         <div class="form-group">
           <label class="form-label">Channel Booking *</label>
-          <select name="channel_id" class="form-input" required>
+          <select name="channel_key" class="form-input" required>
             <option value="">-- Pilih Channel --</option>
             @foreach($channels as $c)
-            <option value="{{ $c->id }}" {{ old('channel_id')==$c->id ? 'selected' : '' }}>
+            <option value="{{ $c->channel_key }}" {{ old('channel_key')==$c->channel_key ? 'selected' : '' }}>
               {{ $c->nama }}
             </option>
             @endforeach
@@ -67,6 +67,7 @@
           <input type="date" name="tgl_checkin" class="form-input"
             value="{{ old('tgl_checkin', date('Y-m-d')) }}" required
             onchange="hitungMalam()">
+          <input type="hidden" name="date_key" id="dateKey" value="{{ old('date_key', date('Ymd')) }}">
         </div>
 
         <div class="form-group">
@@ -74,12 +75,13 @@
           <input type="date" name="tgl_checkout" class="form-input"
             value="{{ old('tgl_checkout', date('Y-m-d', strtotime('+1 day'))) }}" required
             onchange="hitungMalam()">
+          <input type="hidden" name="nights" id="nightsCount" value="{{ old('nights', 1) }}">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Jumlah Tamu *</label>
-          <input type="number" name="jml_tamu" class="form-input"
-            value="{{ old('jml_tamu', 1) }}" min="1" max="10" required>
+          <label class="form-label">Jumlah Kamar *</label>
+          <input type="number" name="rooms_booked" class="form-input"
+            value="{{ old('rooms_booked', 1) }}" min="1" max="10" required>
         </div>
 
         <div class="form-group">
@@ -156,6 +158,10 @@ function hitungMalam() {
   const diskon   = parseFloat(document.querySelector('[name=diskon]').value) || 0;
   const el       = document.getElementById('estimasiTotal');
 
+  if (checkin) {
+    document.getElementById('dateKey').value = checkin.replace(/-/g, '');
+  }
+
   if (!checkin || !checkout || !roomOpt?.dataset?.harga) {
     el.textContent = 'Pilih hotel, kamar & tanggal';
     return;
@@ -163,6 +169,7 @@ function hitungMalam() {
 
   const nights = Math.ceil((new Date(checkout) - new Date(checkin)) / 86400000);
   if (nights <= 0) { el.textContent = 'Tanggal tidak valid'; return; }
+  document.getElementById('nightsCount').value = nights;
 
   const harga = parseFloat(roomOpt.dataset.harga);
   const total = (harga * nights) - diskon;

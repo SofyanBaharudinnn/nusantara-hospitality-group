@@ -114,7 +114,7 @@
             @if($u->role === 'admin')
               <span class="badge badge-purple" style="font-size:0.68rem;">🔑 Admin</span>
             @else
-              <span class="badge badge-success" style="font-size:0.68rem;">👤 Staff</span>
+              <span class="badge badge-success" style="font-size:0.68rem;">👤 User</span>
             @endif
           </td>
 
