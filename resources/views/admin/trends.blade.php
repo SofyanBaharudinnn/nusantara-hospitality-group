@@ -5,7 +5,7 @@
 @section('content')
 
 {{-- Summary Cards --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
+<div class="grid-responsive-4" style="margin-bottom:1.5rem;">
   @foreach([
     ['Peak Season','Jun — Agt, Okt — Des','Okupansi rata-rata 92%','#4ade80'],
     ['Shoulder Season','Mar — Mei, Sep','Okupansi rata-rata 78%','#fbbf24'],
@@ -38,7 +38,7 @@
 </div>
 
 {{-- Charts Row --}}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+<div class="grid-responsive-2" style="margin-bottom:1.25rem;">
   <div class="chart-wrap animate-fade-up delay-3">
     <div class="chart-title" style="margin-bottom:1rem;">Pola Weekend vs Weekday</div>
     <div style="height:220px;"><canvas id="weekdayChart"></canvas></div>
@@ -52,7 +52,7 @@
 {{-- Quarterly Table --}}
 <div class="chart-wrap animate-fade-up delay-4">
   <div class="chart-title" style="margin-bottom:1.25rem;">Analisis Seasonal per Kuartal</div>
-  <div style="overflow-x:auto;">
+  <div class="table-responsive">
     <table class="data-table">
       <thead>
         <tr>
@@ -140,8 +140,8 @@ function buildMain(yr) {
       plugins: { legend: { display: true, labels: { color: '#a89fc8', font: { size: 11 } } } },
       scales: {
         x:  { ticks: { color: '#5e5678' }, grid: { color: 'rgba(124,58,237,0.08)' } },
-        y:  { type:'linear', position:'left',  ticks: { color:'#5e5678', callback: v => v+'%' }, grid: { color:'rgba(124,58,237,0.08)' }, min:40, max:100 },
-        y1: { type:'linear', position:'right', ticks: { color:'#5e5678', callback: v => 'Rp '+v+'M' }, grid: { display:false } }
+        y:  { type:'linear', position:'left',  ticks: { color:'#5e5678', callback: function(v){ return v+'%'; } }, grid: { color:'rgba(124,58,237,0.08)' }, min:40, max:100 },
+        y1: { type:'linear', position:'right', ticks: { color:'#5e5678', callback: function(v){ return 'Rp '+v+'M'; } }, grid: { display:false } }
       }
     }
   });
@@ -149,7 +149,7 @@ function buildMain(yr) {
 
 function switchYear(yr) {
   buildMain(yr);
-  document.querySelectorAll('.year-btn').forEach(b => {
+  document.querySelectorAll('.year-btn').forEach(function(b) {
     b.style.color = '';
     b.style.borderColor = '';
   });
@@ -175,7 +175,7 @@ new Chart(document.getElementById('weekdayChart').getContext('2d'), {
     plugins:{ legend:{ display:true, labels:{ color:'#a89fc8', font:{size:10} } } },
     scales:{
       x:{ ticks:{ color:'#5e5678', font:{size:9} }, grid:{ display:false } },
-      y:{ ticks:{ color:'#5e5678', callback:v=>v+'%' }, grid:{ color:'rgba(124,58,237,0.08)' }, max:100 }
+      y:{ ticks:{ color:'#5e5678', callback:function(v){ return v+'%'; } }, grid:{ color:'rgba(124,58,237,0.08)' }, max:100 }
     }
   }
 });

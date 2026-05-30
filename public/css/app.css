@@ -304,9 +304,69 @@ body::before {
 .progress-bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
 .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--purple-core), var(--purple-light)); border-radius: 3px; transition: width 0.8s ease; }
 
+/* ── Responsive Utilities ── */
+.grid-responsive-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+.grid-responsive-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+.grid-responsive-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
+.grid-responsive-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
+.grid-aside { display: grid; grid-template-columns: 2fr 1fr; gap: 1.25rem; }
+.grid-aside-rev { display: grid; grid-template-columns: 1fr 2fr; gap: 1.25rem; }
+
+/* Hamburger Button */
+.hamburger-btn {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--border-glow);
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+/* Sidebar Overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 45;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1024px) {
+  .grid-responsive-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-responsive-5 { grid-template-columns: repeat(3, 1fr); }
+  .grid-aside, .grid-aside-rev { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
+  /* Grid Overrides */
+  .grid-responsive-2, .grid-responsive-3, .grid-responsive-4, .grid-responsive-5 { grid-template-columns: 1fr; }
+  
+  /* Sidebar Mobile */
+  .sidebar { transform: translateX(-100%); transition: transform 0.3s ease-in-out; }
   .sidebar.open { transform: translateX(0); }
+  .sidebar-overlay.open { display: block; opacity: 1; }
+  
   .dashboard-main { margin-left: 0; }
+  .dashboard-topbar { padding: 1rem; gap: 1rem; }
+  .dashboard-content { padding: 1rem; }
+  .hamburger-btn { display: inline-block; }
+  
   .navbar-links { display: none; }
+  .section-title { font-size: 2.2rem; }
+  .stat-value { font-size: 1.8rem; }
+  
+  /* Landing Grid Overrides */
+  .landing-hero-grid, .landing-data-grid, .landing-about-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
+  .landing-footer-grid { grid-template-columns: 1fr !important; text-align: center; }
 }

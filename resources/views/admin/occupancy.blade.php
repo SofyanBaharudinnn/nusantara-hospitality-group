@@ -25,13 +25,13 @@
   </select>
   <button class="btn btn-primary btn-sm">🔍 Terapkan</button>
   <div style="margin-left:auto;display:flex;gap:8px;">
-    <button class="btn btn-outline btn-sm">📥 Export Excel</button>
-    <button class="btn btn-outline btn-sm">📄 Export PDF</button>
+    <a href="{{ route('admin.export.excel.occupancy', request()->all()) }}" class="btn btn-outline btn-sm">📥 Export Excel</a>
+    <a href="{{ route('admin.export.pdf.occupancy', request()->all()) }}" class="btn btn-outline btn-sm">📄 Export PDF</a>
   </div>
 </div>
 
 {{-- Summary Cards --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
+<div class="grid-responsive-4" style="margin-bottom:1.5rem;">
   @foreach([
     ['NHG Jakarta','148/180','82.2%','Rp 850K','Rp 699K','up'],
     ['NHG Bali Resort','92/120','76.7%','Rp 1.2Jt','Rp 920K','up'],
@@ -62,7 +62,7 @@
 </div>
 
 {{-- Charts --}}
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+<div class="grid-aside" style="margin-bottom:1.25rem;">
   <div class="chart-wrap animate-fade-up delay-2">
     <div class="chart-title" style="margin-bottom:1rem;">Tren Okupansi Bulanan per Properti</div>
     <div style="height:260px;"><canvas id="propOccChart"></canvas></div>
@@ -93,7 +93,7 @@
       <span style="width:10px;height:10px;background:#f87171;border-radius:2px;display:inline-block;margin-left:6px;"></span> <60%
     </div>
   </div>
-  <div style="overflow-x:auto;">
+  <div class="table-responsive">
     <table class="data-table">
       <thead>
         <tr>
@@ -149,7 +149,7 @@ new Chart(document.getElementById('propOccChart').getContext('2d'), {
     plugins:{ legend:{ display:true, labels:{ color:'#a89fc8', font:{size:11} } } },
     scales:{
       x:{ ticks:{ color:'#5e5678' }, grid:{ color:'rgba(124,58,237,0.08)' } },
-      y:{ ticks:{ color:'#5e5678', callback:v=>v+'%' }, grid:{ color:'rgba(124,58,237,0.08)' }, min:40, max:100 }
+      y:{ ticks:{ color:'#5e5678', callback:function(v){ return v+'%'; } }, grid:{ color:'rgba(124,58,237,0.08)' }, min:40, max:100 }
     }
   }
 });

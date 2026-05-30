@@ -9,29 +9,32 @@ class Customer extends Model
 {
     use HasFactory;
 
+    protected $table      = 'dim_guest';
+    protected $primaryKey = 'guest_key';
+    public    $timestamps = false;
+
     protected $fillable = [
-        'nama', 'email', 'telepon', 'segmen',
-        'negara', 'kota_asal', 'tgl_lahir',
-        'tier', 'total_kunjungan', 'total_spending',
+        'guest_id', 'guest_name', 'nationality', 'segment', 'city',
     ];
 
-    protected $casts = [
-        'tgl_lahir'      => 'date',
-        'total_spending' => 'decimal:2',
-    ];
+    // Alias helpers untuk kompatibilitas view lama
+    public function getNamaAttribute(): string    { return $this->guest_name ?? ''; }
+    public function getNegaraAttribute(): string  { return $this->nationality ?? ''; }
+    public function getSegmenAttribute(): string  { return $this->segment ?? ''; }
+    public function getKotaAsalAttribute(): string { return $this->city ?? ''; }
+
+    // Kolom lama yang tidak ada di DW — kembalikan nilai default
+    public function getTierAttribute(): string        { return 'silver'; }
+    public function getTotalKunjunganAttribute(): int { return $this->reservations()->count(); }
+    public function getTotalSpendingAttribute()       { return $this->reservations()->sum('room_revenue'); }
+
+    public function reservations()
+    {
+        return $this->hasMany(Booking::class, 'guest_key', 'guest_key');
+    }
 
     public function bookings()
     {
-        return $this->hasMany(Booking::class);
-    }
-
-    public function updateStats(): void
-    {
-        $this->update([
-            'total_kunjungan' => $this->bookings()
-                ->whereIn('status', ['confirmed', 'completed'])->count(),
-            'total_spending'  => $this->bookings()
-                ->whereIn('status', ['confirmed', 'completed'])->sum('total_bayar'),
-        ]);
+        return $this->reservations();
     }
 }

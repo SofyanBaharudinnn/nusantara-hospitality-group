@@ -13,7 +13,7 @@
     </div>
     <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">Per hari ini · {{ now()->isoFormat('D MMMM YYYY') }}</div>
   </div>
-  <div style="display:flex;gap:2.5rem;">
+  <div style="display:flex;gap:2.5rem;flex-wrap:wrap;">
     <div style="text-align:center;">
       <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:700;color:#4ade80;">{{ $overallStats['total_terisi'] }}</div>
       <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">Kamar Terisi</div>
@@ -109,7 +109,7 @@
 </div>
 
 {{-- ── Charts Row ── --}}
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+<div class="grid-aside" style="margin-bottom:1.25rem;">
 
   {{-- 30-day trend --}}
   <div class="chart-wrap animate-fade-up delay-2">
@@ -155,12 +155,12 @@ new Chart(document.getElementById('trend30Chart').getContext('2d'), {
         backgroundColor: 'rgba(17,14,31,0.95)',
         borderColor: 'rgba(34,211,238,0.3)',
         borderWidth: 1,
-        callbacks: { label: ctx => ' ' + ctx.parsed.y + '%' }
+        callbacks: { label: function(ctx){ return ' ' + ctx.parsed.y + '%'; } }
       }
     },
     scales: {
       x: { ticks: { color: '#5e5678', font: { size: 10 } }, grid: { color: 'rgba(124,58,237,0.08)' } },
-      y: { ticks: { color: '#5e5678', callback: v => v + '%', font: { size: 10 } }, grid: { color: 'rgba(124,58,237,0.08)' }, min: 0, max: 100 }
+      y: { ticks: { color: '#5e5678', callback: function(v){ return v + '%'; }, font: { size: 10 } }, grid: { color: 'rgba(124,58,237,0.08)' }, min: 0, max: 100 }
     }
   }
 });
@@ -184,12 +184,12 @@ new Chart(document.getElementById('occChart').getContext('2d'), {
         backgroundColor: 'rgba(17,14,31,0.95)',
         borderColor: 'rgba(124,58,237,0.3)',
         borderWidth: 1,
-        callbacks: { label: ctx => ' ' + ctx.parsed.y + '% ocupansi' }
+        callbacks: { label: function(ctx){ return ' ' + ctx.parsed.y + '% ocupansi'; } }
       }
     },
     scales: {
       x: { ticks: { color: '#5e5678', font: { size: 10 } }, grid: { display: false } },
-      y: { ticks: { color: '#5e5678', callback: v => v + '%', font: { size: 10 } }, grid: { color: 'rgba(124,58,237,0.08)' }, max: 100 }
+      y: { ticks: { color: '#5e5678', callback: function(v){ return v + '%'; }, font: { size: 10 } }, grid: { color: 'rgba(124,58,237,0.08)' }, max: 100 }
     }
   }
 });

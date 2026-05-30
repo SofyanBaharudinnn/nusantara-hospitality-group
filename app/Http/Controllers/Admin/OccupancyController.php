@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\DimTime;
 use App\Models\Hotel;
+use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -12,73 +14,64 @@ class OccupancyController extends Controller
 {
     public function index(Request $request)
     {
-        $today     = today();
-        $year      = $request->input('year',  now()->year);
-        $month     = $request->input('month', null);
-        $hotelId   = $request->input('hotel', null);
+        $year    = $request->input('year', 2024);
+        $month   = $request->input('month', null);
+        $hotelId = $request->input('hotel', null);
 
         // ── Data per Properti ──
-        $hotels = Hotel::where('is_active', true)->get()->map(function ($hotel) use ($today) {
-            $terisi = Booking::where('hotel_id', $hotel->id)
-                        ->whereIn('status', ['confirmed','completed'])
-                        ->whereDate('tgl_checkin', '<=', $today)
-                        ->whereDate('tgl_checkout', '>=', $today)
-                        ->count();
-
-            $rate = $hotel->kapasitas_total > 0
-                ? round(($terisi / $hotel->kapasitas_total) * 100, 1) : 0;
-
-            $revenue = Booking::where('hotel_id', $hotel->id)
-                        ->whereIn('status', ['confirmed','completed'])
-                        ->sum('total_bayar');
-
-            $adr = Booking::where('hotel_id', $hotel->id)
-                    ->whereIn('status', ['confirmed','completed'])
-                    ->avg('harga_per_malam') ?? 0;
+        $hotels = Hotel::all()->map(function ($hotel) {
+            $totalKamar = Room::where('hotel_key', $hotel->hotel_key)->count();
+            $terisi     = Booking::where('hotel_key', $hotel->hotel_key)
+                            ->where('is_cancelled', 'No')
+                            ->count();
+            $rate       = $totalKamar > 0
+                ? round(($terisi / $totalKamar) * 100, 1) : 0;
+            $revenue    = Booking::where('hotel_key', $hotel->hotel_key)
+                            ->where('is_cancelled', 'No')
+                            ->sum('room_revenue');
+            $avgRevPer  = $terisi > 0 ? ($revenue / $terisi) : 0;
 
             return [
-                'id'        => $hotel->id,
-                'nama'      => $hotel->nama,
-                'kamar'     => $terisi . '/' . $hotel->kapasitas_total,
-                'rate'      => $rate,
-                'adr'       => 'Rp ' . number_format($adr, 0, ',', '.'),
-                'revpar'    => 'Rp ' . number_format($adr * ($rate / 100), 0, ',', '.'),
-                'revenue'   => 'Rp ' . number_format($revenue, 0, ',', '.'),
+                'id'      => $hotel->hotel_key,
+                'nama'    => $hotel->hotel_name,
+                'kamar'   => $terisi . '/' . $totalKamar,
+                'rate'    => $rate,
+                'adr'     => 'Rp ' . number_format($avgRevPer, 0, ',', '.'),
+                'revpar'  => 'Rp ' . number_format($avgRevPer * ($rate / 100), 0, ',', '.'),
+                'revenue' => 'Rp ' . number_format($revenue, 0, ',', '.'),
             ];
         });
 
         // ── Chart Bulanan per Properti ──
-        $chartData = Hotel::where('is_active', true)->get()->map(function ($hotel) use ($year) {
+        $chartData = Hotel::all()->map(function ($hotel) use ($year) {
+            $totalKamar = Room::where('hotel_key', $hotel->hotel_key)->count();
             $data = [];
             for ($m = 1; $m <= 12; $m++) {
-                $start = \Carbon\Carbon::create($year, $m, 1)->startOfMonth();
-                $end   = $start->copy()->endOfMonth();
-
-                $booked = Booking::where('hotel_id', $hotel->id)
-                            ->whereIn('status', ['confirmed','completed'])
-                            ->whereDate('tgl_checkin', '<=', $end)
-                            ->whereDate('tgl_checkout', '>=', $start)
+                $keys   = DimTime::keysForMonth($year, $m);
+                $booked = Booking::where('hotel_key', $hotel->hotel_key)
+                            ->where('is_cancelled', 'No')
+                            ->whereIn('date_key', $keys)
                             ->count();
-
-                $data[] = $hotel->kapasitas_total > 0
-                    ? round(($booked / $hotel->kapasitas_total) * 100, 1) : 0;
+                $data[] = $totalKamar > 0
+                    ? round(($booked / $totalKamar) * 100, 1) : 0;
             }
-            return ['nama' => $hotel->nama, 'data' => $data];
+            return ['nama' => $hotel->hotel_name, 'data' => $data];
         });
 
         // ── Tipe Kamar ──
-        $roomTypes = Booking::join('rooms','bookings.room_id','=','rooms.id')
-                        ->select('rooms.tipe', DB::raw('count(*) as total'))
-                        ->whereIn('bookings.status', ['confirmed','completed'])
-                        ->groupBy('rooms.tipe')
-                        ->pluck('total','tipe');
+        $roomTypes = Booking::join('dim_room', 'fact_reservation.room_key', '=', 'dim_room.room_key')
+                        ->select('dim_room.room_type', DB::raw('count(*) as total'))
+                        ->where('fact_reservation.is_cancelled', 'No')
+                        ->groupBy('dim_room.room_type')
+                        ->pluck('total', 'room_type');
 
         // ── Booking Terbaru ──
-        $query = Booking::with(['hotel','room','customer','channel'])->latest();
-        if ($hotelId) $query->where('hotel_id', $hotelId);
+        $query = Booking::with(['hotel', 'room', 'customer', 'channel'])
+                        ->latest('reservation_key');
+        if ($hotelId) $query->where('hotel_key', $hotelId);
         $bookings = $query->limit(15)->get();
 
-        $hotelList = Hotel::where('is_active', true)->get();
+        $hotelList = Hotel::all();
 
         return view('admin.occupancy', compact(
             'hotels', 'chartData', 'roomTypes',

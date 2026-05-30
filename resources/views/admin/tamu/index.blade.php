@@ -90,12 +90,12 @@
           </td>
           <td>
             <div style="display:flex;gap:6px;">
-              <a href="{{ route('admin.tamu.show', $c->id) }}"
+              <a href="{{ route('admin.tamu.show', $c->guest_key) }}"
                 class="btn btn-outline btn-sm" style="padding:4px 10px;font-size:0.72rem;">👁️</a>
-              <a href="{{ route('admin.tamu.edit', $c->id) }}"
+              <a href="{{ route('admin.tamu.edit', $c->guest_key) }}"
                 class="btn btn-outline btn-sm"
                 style="padding:4px 10px;font-size:0.72rem;color:#fbbf24;border-color:rgba(251,191,36,0.3);">✏️</a>
-              <form method="POST" action="{{ route('admin.tamu.destroy', $c->id) }}"
+              <form method="POST" action="{{ route('admin.tamu.destroy', $c->guest_key) }}"
                 onsubmit="return confirm('Hapus tamu {{ $c->nama }}?')">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn btn-outline btn-sm"

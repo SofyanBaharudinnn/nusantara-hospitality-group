@@ -5,7 +5,7 @@
 @section('content')
 
 {{-- ── Insight Banner ── --}}
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;">
+<div class="grid-responsive-3" style="margin-bottom:1.5rem;">
   <div style="background:linear-gradient(135deg,rgba(74,222,128,0.1),rgba(74,222,128,0.03));border:1px solid rgba(74,222,128,0.2);border-radius:var(--radius-md);padding:1.25rem;" class="animate-fade-up">
     <div style="font-size:0.72rem;font-weight:600;color:#4ade80;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;">🏆 Bulan Terbaik</div>
     <div style="font-family:var(--font-display);font-size:1.25rem;font-weight:700;color:var(--text-primary);">{{ $insight['best_month'] }}</div>
@@ -24,7 +24,7 @@
 </div>
 
 {{-- ── Season Cards ── --}}
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:1.5rem;">
+<div class="grid-responsive-3" style="margin-bottom:1.5rem;">
   @foreach($seasons as $i => $s)
   @php
     $colorMap = ['#f87171' => 'rgba(248,113,113', '#fbbf24' => 'rgba(251,191,36', '#4ade80' => 'rgba(74,222,128'];
@@ -47,7 +47,7 @@
 </div>
 
 {{-- ── Quarters ── --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
+<div class="grid-responsive-4" style="margin-bottom:1.5rem;">
   @foreach($quarters as $i => $q)
   <div class="chart-wrap animate-fade-up" style="animation-delay:{{ $i * 0.08 }}s;">
     <div style="text-align:center;margin-bottom:0.75rem;">
@@ -95,7 +95,7 @@
 {{-- ── Tabel Per Bulan ── --}}
 <div class="chart-wrap animate-fade-up delay-3">
   <div class="chart-title" style="margin-bottom:1.25rem;">📅 Ringkasan Per Bulan — {{ now()->year }}</div>
-  <div style="overflow-x:auto;">
+  <div class="table-responsive">
     <table class="data-table">
       <thead>
         <tr>
@@ -200,7 +200,7 @@ new Chart(document.getElementById('dualChart').getContext('2d'), {
         type: 'linear',
         position: 'right',
         min: 0, max: 100,
-        ticks: { color: '#22d3ee', callback: v => v + '%', font: { size: 11 } },
+        ticks: { color: '#22d3ee', callback: function(v){ return v + '%'; }, font: { size: 11 } },
         grid: { drawOnChartArea: false },
         title: { display: true, text: 'Ocupansi %', color: '#22d3ee', font: { size: 11 } },
       }

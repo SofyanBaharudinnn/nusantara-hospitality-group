@@ -8,63 +8,57 @@ class SchemaController extends Controller
 {
     public function index()
     {
+        // Skema yang sudah diperbarui sesuai dengan dw_hospitality
         $dimensions = [
-            'DIM_DATE' => [
+            'DIM_TIME' => [
                 'color'  => '#a855f7',
                 'fields' => [
-                    'date_id (PK)', 'tanggal', 'hari', 'minggu',
-                    'bulan', 'kuartal', 'tahun', 'musim', 'is_weekend',
+                    'date_key (PK)', 'date', 'year', 'quarter',
+                    'month', 'month_name', 'day', 'day_of_week', 'is_weekend',
                 ],
             ],
             'DIM_HOTEL' => [
                 'color'  => '#22d3ee',
                 'fields' => [
-                    'hotel_id (PK)', 'nama_hotel', 'tipe',
-                    'kota', 'provinsi', 'bintang', 'kapasitas_total',
+                    'hotel_key (PK)', 'hotel_id', 'hotel_name',
+                    'city', 'star_rating', 'hotel_type',
                 ],
             ],
             'DIM_ROOM' => [
                 'color'  => '#ec4899',
                 'fields' => [
-                    'room_id (PK)', 'hotel_id (FK)', 'tipe_kamar',
-                    'kapasitas', 'fasilitas', 'harga_dasar', 'lantai',
+                    'room_key (PK)', 'room_id', 'hotel_key (FK)',
+                    'room_type', 'capacity', 'base_rate',
                 ],
             ],
-            'DIM_CUSTOMER' => [
+            'DIM_GUEST' => [
                 'color'  => '#f59e0b',
                 'fields' => [
-                    'customer_id (PK)', 'nama', 'email', 'telepon',
-                    'segmen', 'negara', 'kota_asal', 'tgl_lahir',
+                    'guest_key (PK)', 'guest_id', 'guest_name',
+                    'nationality', 'segment', 'city',
                 ],
             ],
-            'DIM_CHANNEL' => [
+            'DIM_BOOKING_CHANNEL' => [
                 'color'  => '#4ade80',
                 'fields' => [
-                    'channel_id (PK)', 'nama_channel',
-                    'tipe', 'platform', 'komisi_pct',
+                    'channel_key (PK)', 'channel_name', 'channel_type',
                 ],
             ],
         ];
 
         $fact = [
-            'name'   => 'FACT_BOOKING',
+            'name'   => 'FACT_RESERVATION',
             'fields' => [
-                'booking_id (PK)',
-                'date_id (FK)',
-                'hotel_id (FK)',
-                'room_id (FK)',
-                'customer_id (FK)',
-                'channel_id (FK)',
-                'tgl_checkin',
-                'tgl_checkout',
-                'jml_malam',
-                'jml_tamu',
-                'harga_per_malam',
-                'total_bayar',
-                'diskon',
-                'status',
-                'rating',
-                'created_at',
+                'reservation_key (PK)',
+                'date_key (FK → DIM_TIME)',
+                'hotel_key (FK → DIM_HOTEL)',
+                'room_key (FK → DIM_ROOM)',
+                'guest_key (FK → DIM_GUEST)',
+                'channel_key (FK → DIM_BOOKING_CHANNEL)',
+                'nights',
+                'rooms_booked',
+                'room_revenue',
+                'is_cancelled (Yes/No)',
             ],
         ];
 

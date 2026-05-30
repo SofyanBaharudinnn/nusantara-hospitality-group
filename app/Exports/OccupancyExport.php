@@ -29,25 +29,24 @@ class OccupancyExport implements
     public function array(): array
     {
         $rows   = [];
-        $hotels = Hotel::where('is_active', true)->get();
+        $hotels = Hotel::all();
         $months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
 
         foreach ($hotels as $hotel) {
             for ($m = 1; $m <= 12; $m++) {
-                $start  = \Carbon\Carbon::create($this->year, $m, 1)->startOfMonth();
-                $end    = $start->copy()->endOfMonth();
+                $keys = \App\Models\DimTime::where('year', $this->year)
+                                ->where('month', $m)
+                                ->pluck('date_key')->toArray();
 
-                $booked  = Booking::where('hotel_id', $hotel->id)
-                            ->whereIn('status', ['confirmed','completed'])
-                            ->whereDate('tgl_checkin', '<=', $end)
-                            ->whereDate('tgl_checkout', '>=', $start)
+                $booked  = Booking::where('hotel_key', $hotel->hotel_key)
+                            ->where('is_cancelled', 'No')
+                            ->whereIn('date_key', $keys)
                             ->count();
 
-                $revenue = Booking::where('hotel_id', $hotel->id)
-                            ->whereIn('status', ['confirmed','completed'])
-                            ->whereYear('tgl_checkin', $this->year)
-                            ->whereMonth('tgl_checkin', $m)
-                            ->sum('total_bayar');
+                $revenue = Booking::where('hotel_key', $hotel->hotel_key)
+                            ->where('is_cancelled', 'No')
+                            ->whereIn('date_key', $keys)
+                            ->sum('room_revenue');
 
                 $rate = $hotel->kapasitas_total > 0
                         ? round(($booked / $hotel->kapasitas_total) * 100, 1) : 0;

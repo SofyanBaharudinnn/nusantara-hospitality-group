@@ -5,36 +5,36 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Customer;
+use App\Models\DimTime;
 use App\Models\Hotel;
+use App\Models\Room;
 
 class ReportController extends Controller
 {
     public function index()
     {
         $reports = [
-            ['icon'=>'🏨','title'=>'Laporan Okupansi Bulanan',   'description'=>'Ringkasan tingkat hunian semua properti per bulan','period'=>now()->format('M Y'),    'status'=>'ready'],
-            ['icon'=>'💰','title'=>'Laporan Revenue',            'description'=>'Total pendapatan breakdown per properti & channel', 'period'=>'Q' . now()->quarter . ' ' . now()->year, 'status'=>'ready'],
-            ['icon'=>'👥','title'=>'Laporan Customer Behavior',  'description'=>'Analisis segmentasi tamu, repeat rate, dan CLV',   'period'=>now()->format('M Y'),    'status'=>'ready'],
-            ['icon'=>'📈','title'=>'Laporan Seasonal Trend',     'description'=>'Tren musiman dan perbandingan YoY',                'period'=>'Tahunan ' . now()->year,'status'=>'ready'],
+            ['icon'=>'🏨','title'=>'Laporan Okupansi Bulanan',   'description'=>'Ringkasan tingkat hunian semua properti per bulan','period'=>'Dec 2024',    'status'=>'ready'],
+            ['icon'=>'💰','title'=>'Laporan Revenue',            'description'=>'Total pendapatan breakdown per properti & channel', 'period'=>'Q4 2024', 'status'=>'ready'],
+            ['icon'=>'👥','title'=>'Laporan Customer Behavior',  'description'=>'Analisis segmentasi tamu, repeat rate, dan CLV',   'period'=>'Dec 2024',    'status'=>'ready'],
+            ['icon'=>'📈','title'=>'Laporan Seasonal Trend',     'description'=>'Tren musiman dan perbandingan YoY',                'period'=>'Tahunan 2024','status'=>'ready'],
         ];
 
         // Ringkasan per hotel
-        $hotelSummary = Hotel::where('is_active', true)->get()->map(function ($hotel) {
-            $bookings  = Booking::where('hotel_id', $hotel->id)
-                            ->whereIn('status', ['confirmed','completed']);
-            $revenue   = $bookings->sum('total_bayar');
-            $tamu      = $bookings->count();
-            $today     = today();
-            $terisi    = Booking::where('hotel_id', $hotel->id)
-                            ->whereIn('status', ['confirmed','completed'])
-                            ->whereDate('tgl_checkin', '<=', $today)
-                            ->whereDate('tgl_checkout', '>=', $today)
+        $hotelSummary = Hotel::all()->map(function ($hotel) {
+            $totalKamar = Room::where('hotel_key', $hotel->hotel_key)->count();
+            $revenue    = Booking::where('hotel_key', $hotel->hotel_key)
+                            ->where('is_cancelled', 'No')
+                            ->sum('room_revenue');
+            $tamu       = Booking::where('hotel_key', $hotel->hotel_key)
+                            ->where('is_cancelled', 'No')
                             ->count();
-            $rate      = $hotel->kapasitas_total > 0
-                         ? round(($terisi / $hotel->kapasitas_total) * 100, 1) : 0;
+            $terisi     = $tamu; // di DW semua reservasi aktif = terisi
+            $rate       = $totalKamar > 0
+                         ? round(($terisi / $totalKamar) * 100, 1) : 0;
 
             return [
-                'nama'    => $hotel->nama,
+                'nama'    => $hotel->hotel_name,
                 'occ'     => $rate . '%',
                 'tamu'    => number_format($tamu, 0, ',', '.'),
                 'revenue' => 'Rp ' . number_format($revenue / 1000000, 1, ',', '.') . ' M',
@@ -42,29 +42,30 @@ class ReportController extends Controller
         });
 
         // Total
-        $totalRevenue = Booking::whereIn('status', ['confirmed','completed'])->sum('total_bayar');
-        $totalTamu    = Booking::whereIn('status', ['confirmed','completed'])->count();
+        $totalRevenue = Booking::where('is_cancelled', 'No')->sum('room_revenue');
+        $totalTamu    = Booking::where('is_cancelled', 'No')->count();
 
-        // Revenue per kuartal
+        // Revenue per kuartal per hotel
         $revenueKuartal = [];
         foreach (range(1, 4) as $q) {
             $from = ($q - 1) * 3 + 1;
             $to   = $q * 3;
-            $rev  = Hotel::where('is_active', true)->get()->map(function ($hotel) use ($from, $to) {
+            $rev  = Hotel::all()->map(function ($hotel) use ($from, $to) {
+                $keys = DimTime::where('year', 2024)
+                            ->whereBetween('month', [$from, $to])
+                            ->pluck('date_key')->toArray();
                 return round(
-                    Booking::where('hotel_id', $hotel->id)
-                        ->whereIn('status', ['confirmed','completed'])
-                        ->whereYear('tgl_checkin', now()->year)
-                        ->whereMonth('tgl_checkin', '>=', $from)
-                        ->whereMonth('tgl_checkin', '<=', $to)
-                        ->sum('total_bayar') / 1000000,
+                    Booking::where('hotel_key', $hotel->hotel_key)
+                        ->where('is_cancelled', 'No')
+                        ->whereIn('date_key', $keys)
+                        ->sum('room_revenue') / 1000000,
                     1
                 );
             })->toArray();
             $revenueKuartal[] = $rev;
         }
 
-        $hotelNames = Hotel::where('is_active', true)->pluck('nama')->toArray();
+        $hotelNames = Hotel::all()->pluck('hotel_name')->toArray();
 
         return view('admin.reports', compact(
             'reports', 'hotelSummary', 'totalRevenue',

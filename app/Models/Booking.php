@@ -9,34 +9,102 @@ class Booking extends Model
 {
     use HasFactory;
 
+    protected $table      = 'fact_reservation';
+    protected $primaryKey = 'reservation_key';
+    public    $timestamps = false;         // DW tidak punya created_at/updated_at
+    public    $incrementing = false;       // PK bukan auto-increment di DW
+
     protected $fillable = [
-        'kode_booking', 'hotel_id', 'room_id',
-        'customer_id', 'channel_id',
-        'tgl_checkin', 'tgl_checkout',
-        'jml_malam', 'jml_tamu',
-        'harga_per_malam', 'total_bayar', 'diskon',
-        'status', 'rating', 'catatan',
+        'date_key', 'guest_key', 'hotel_key', 'room_key', 'channel_key',
+        'nights', 'rooms_booked', 'room_revenue', 'is_cancelled',
     ];
 
     protected $casts = [
-        'tgl_checkin'     => 'date',
-        'tgl_checkout'    => 'date',
-        'harga_per_malam' => 'decimal:2',
-        'total_bayar'     => 'decimal:2',
-        'diskon'          => 'decimal:2',
+        'room_revenue' => 'decimal:2',
     ];
 
-    public function hotel()    { return $this->belongsTo(Hotel::class); }
-    public function room()     { return $this->belongsTo(Room::class); }
-    public function customer() { return $this->belongsTo(Customer::class); }
-    public function channel()  { return $this->belongsTo(Channel::class); }
+    // ── Relasi ke dimensi ──
+    public function hotel()
+    {
+        return $this->belongsTo(Hotel::class, 'hotel_key', 'hotel_key');
+    }
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class, 'room_key', 'room_key');
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'guest_key', 'guest_key');
+    }
+
+    public function channel()
+    {
+        return $this->belongsTo(Channel::class, 'channel_key', 'channel_key');
+    }
+
+    public function dimTime()
+    {
+        return $this->belongsTo(DimTime::class, 'date_key', 'date_key');
+    }
+
+    // ── Alias accessors untuk kompatibilitas view lama ──
+
+    /** Status: 'No' = active, 'Yes' = cancelled */
+    public function getStatusAttribute(): string
+    {
+        return $this->is_cancelled === 'Yes' ? 'cancelled' : 'confirmed';
+    }
+
+    public function getTotalBayarAttribute() { return $this->room_revenue ?? 0; }
+    public function getJmlMalamAttribute()   { return $this->nights ?? 0; }
+    public function getJmlTamuAttribute()    { return $this->rooms_booked ?? 1; }
+    public function getRatingAttribute()     { return null; }
+    public function getCatatanAttribute()    { return null; }
+    public function getDiskonAttribute()     { return 0; }
+    public function getKodeBookingAttribute(): string { return 'RSV-' . $this->reservation_key; }
+
+    // Tanggal check-in dari dim_time (diload saat dibutuhkan)
+    public function getTglCheckinAttribute()
+    {
+        return $this->dimTime ? \Carbon\Carbon::parse($this->dimTime->date) : null;
+    }
+
+    public function getTglCheckoutAttribute()
+    {
+        $checkin = $this->getTglCheckinAttribute();
+        if (!$checkin) return null;
+        return $checkin->copy()->addDays($this->nights ?? 0);
+    }
+
+    // Helper scope: reservasi aktif (tidak dibatalkan)
+    public function scopeActive($query)
+    {
+        return $query->where('is_cancelled', 'No');
+    }
+
+    // Helper scope: reservasi dibatalkan
+    public function scopeCancelled($query)
+    {
+        return $query->where('is_cancelled', 'Yes');
+    }
+
+    // Emulasi whereIn('status', [...]) — digunakan di controller lama
+    public function scopeWhereInStatus($query, array $statuses)
+    {
+        if (in_array('cancelled', $statuses) && !in_array('confirmed', $statuses)) {
+            return $query->where('is_cancelled', 'Yes');
+        }
+        if (!in_array('cancelled', $statuses)) {
+            return $query->where('is_cancelled', 'No');
+        }
+        return $query; // semua status
+    }
 
     public static function generateKode(): string
     {
-        do {
-            $kode = 'BK-' . strtoupper(substr(md5(uniqid()), 0, 6));
-        } while (self::where('kode_booking', $kode)->exists());
-
-        return $kode;
+        $max = self::max('reservation_key') ?? 0;
+        return 'RSV-' . str_pad($max + 1, 5, '0', STR_PAD_LEFT);
     }
 }

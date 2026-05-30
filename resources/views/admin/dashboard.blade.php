@@ -5,7 +5,7 @@
 @section('content')
 
 {{-- Stat Cards --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:1.5rem;">
+<div class="grid-responsive-4" style="margin-bottom:1.5rem;">
   <div class="stat-card animate-fade-up">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;">
       <div class="stat-label">Tingkat Okupansi</div>
@@ -46,14 +46,14 @@
 </div>
 
 {{-- Charts Row --}}
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+<div class="grid-aside" style="margin-bottom:1.25rem;">
 
   {{-- Occupancy Line Chart --}}
   <div class="chart-wrap animate-fade-up delay-2">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
       <div>
-        <div class="chart-title">Tren Okupansi — {{ now()->year }}</div>
-        <div style="font-size:0.78rem;color:var(--text-muted);">Semua properti NHG</div>
+        <div class="chart-title">Tren Okupansi {{ $displayDate }}</div>
+        <div style="font-size:0.78rem;color:var(--text-muted);">Semua properti NHG - Data diperbarui secara real-time</div>
       </div>
     </div>
     <div style="height:220px;"><canvas id="occupancyChart"></canvas></div>
@@ -81,13 +81,13 @@
 </div>
 
 {{-- Revenue + Seasonal --}}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+<div class="grid-responsive-2" style="margin-bottom:1.25rem;">
   <div class="chart-wrap animate-fade-up delay-3">
     <div class="chart-title" style="margin-bottom:1.25rem;">Revenue per Properti (Rp Juta)</div>
     <div style="height:200px;"><canvas id="revenueChart"></canvas></div>
   </div>
   <div class="chart-wrap animate-fade-up delay-4">
-    <div class="chart-title" style="margin-bottom:1.25rem;">Tren Okupansi Bulanan — Radar</div>
+    <div class="chart-title" style="margin-bottom:1.25rem;">Tren Okupansi {{ $displayMonth }} {{ $year }} — Radar</div>
     <div style="height:200px;"><canvas id="seasonChart"></canvas></div>
   </div>
 </div>
@@ -98,7 +98,7 @@
     <div class="chart-title">Reservasi Terbaru</div>
     <a href="{{ route('admin.occupancy') }}" class="btn btn-outline btn-sm">Lihat Semua →</a>
   </div>
-  <div style="overflow-x:auto;">
+  <div class="table-responsive">
     <table class="data-table">
       <thead>
         <tr>
@@ -130,9 +130,7 @@
               {{ ucfirst($b->room->tipe ?? '-') }}
             </span>
           </td>
-          <td style="color:var(--text-secondary);">
-            {{ $b->tgl_checkin->format('d M Y') }}
-          </td>
+          <td style="color:var(--text-muted);font-size:0.82rem;">{{ $b->tgl_checkin ? \Carbon\Carbon::parse($b->tgl_checkin)->isoFormat('D MMM YYYY') : 'N/A' }}</td>
           <td style="color:var(--text-secondary);">
             {{ $b->tgl_checkout->format('d M Y') }}
           </td>
@@ -169,13 +167,20 @@
 </div>
 
 @push('scripts')
+@php
+  $monthlyData = $occupancyMonthly;
+  $revenueLabels = $revenueByHotel->pluck('nama')->toArray();
+  $revenueData = $revenueByHotel->pluck('revenue')->toArray();
+  $channelLabels = $channelData->pluck('nama')->toArray();
+  $channelTotals = $channelData->pluck('total')->toArray();
+@endphp
 <script>
 const labels = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
-const occupancyData = @json($occupancyMonthly);
-const channelLabels = @json($channelData->pluck('nama'));
-const channelValues = @json($channelData->pluck('total'));
-const hotelNames    = @json($revenueByHotel->pluck('nama'));
-const hotelRevenue  = @json($revenueByHotel->pluck('revenue'));
+const occupancyData = @json($monthlyData);
+const channelLabels = @json($channelLabels);
+const channelValues = @json($channelTotals);
+const hotelNames    = @json($revenueLabels);
+const hotelRevenue  = @json($revenueData);
 
 // Occupancy Line
 new Chart(document.getElementById('occupancyChart').getContext('2d'), {
@@ -198,7 +203,7 @@ new Chart(document.getElementById('occupancyChart').getContext('2d'), {
     plugins: { legend: { display: false } },
     scales: {
       x: { ticks: { color: '#5e5678' }, grid: { color: 'rgba(124,58,237,0.08)' } },
-      y: { ticks: { color: '#5e5678', callback: v => v + '%' }, grid: { color: 'rgba(124,58,237,0.08)' }, min: 0, max: 100 }
+      y: { ticks: { color: '#5e5678', callback: function(v){ return v + '%'; } }, grid: { color: 'rgba(124,58,237,0.08)' }, min: 0, max: 100 }
     }
   }
 });
@@ -235,7 +240,7 @@ new Chart(document.getElementById('revenueChart').getContext('2d'), {
     plugins: { legend: { display: false } },
     scales: {
       x: { ticks: { color: '#5e5678' }, grid: { display: false } },
-      y: { ticks: { color: '#5e5678', callback: v => 'Rp ' + v + 'Jt' }, grid: { color: 'rgba(124,58,237,0.08)' } }
+      y: { ticks: { color: '#5e5678', callback: function(v){ return 'Rp ' + v + 'Jt'; } }, grid: { color: 'rgba(124,58,237,0.08)' } }
     }
   }
 });
@@ -246,7 +251,7 @@ new Chart(document.getElementById('seasonChart').getContext('2d'), {
   data: {
     labels,
     datasets: [{
-      label: '{{ now()->year }}',
+      label: '@json(now()->year)',
       data: occupancyData,
       borderColor: '#a855f7',
       backgroundColor: 'rgba(168,85,247,0.1)',

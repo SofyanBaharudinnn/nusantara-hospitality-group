@@ -9,13 +9,25 @@ class Channel extends Model
 {
     use HasFactory;
 
+    protected $table      = 'dim_booking_channel';
+    protected $primaryKey = 'channel_key';
+    public    $timestamps = false;
+
     protected $fillable = [
-        'nama', 'tipe', 'platform',
-        'komisi_pct', 'is_online', 'is_active',
+        'channel_name', 'channel_type',
     ];
+
+    // Alias helpers untuk kompatibilitas view lama
+    public function getNamaAttribute(): string { return $this->channel_name ?? ''; }
+    public function getTipeAttribute(): string { return $this->channel_type ?? ''; }
+
+    public function reservations()
+    {
+        return $this->hasMany(Booking::class, 'channel_key', 'channel_key');
+    }
 
     public function bookings()
     {
-        return $this->hasMany(Booking::class);
+        return $this->reservations();
     }
 }

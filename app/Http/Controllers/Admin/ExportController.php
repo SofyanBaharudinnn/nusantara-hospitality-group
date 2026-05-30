@@ -2,16 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exports\BookingsExport;
-use App\Exports\CustomersExport;
-use App\Exports\OccupancyExport;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Customer;
 use App\Models\Hotel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 
 class ExportController extends Controller
 {
@@ -21,40 +17,53 @@ class ExportController extends Controller
     {
         $filename = 'booking_' . ($request->year ?? now()->year) . '_' . now()->format('Ymd') . '.xlsx';
 
-        return Excel::download(
-            new BookingsExport($request->hotel_id, $request->status, $request->year),
-            $filename
-        );
+        // Jika kelas BookingsExport ada, gunakan; jika tidak, export manual
+        if (class_exists(\App\Exports\BookingsExport::class)) {
+            return \Maatwebsite\Excel\Facades\Excel::download(
+                new \App\Exports\BookingsExport($request->hotel_key, $request->status, $request->year),
+                $filename
+            );
+        }
+
+        return back()->with('info', 'Export Excel belum tersedia.');
     }
 
     public function excelCustomers()
     {
         $filename = 'tamu_nhg_' . now()->format('Ymd') . '.xlsx';
-        return Excel::download(new CustomersExport(), $filename);
+        if (class_exists(\App\Exports\CustomersExport::class)) {
+            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\CustomersExport(), $filename);
+        }
+        return back()->with('info', 'Export Excel belum tersedia.');
     }
 
     public function excelOccupancy(Request $request)
     {
         $filename = 'okupansi_' . ($request->year ?? now()->year) . '_' . now()->format('Ymd') . '.xlsx';
-        return Excel::download(new OccupancyExport($request->year), $filename);
+        if (class_exists(\App\Exports\OccupancyExport::class)) {
+            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\OccupancyExport($request->year), $filename);
+        }
+        return back()->with('info', 'Export Excel belum tersedia.');
     }
 
     // ── PDF ──
 
     public function pdfBookings(Request $request)
     {
-        $query = Booking::with(['hotel','room','customer','channel'])
-                    ->orderBy('tgl_checkin', 'desc');
+        $query = Booking::with(['hotel', 'room', 'customer', 'channel'])
+                    ->latest('reservation_key');
 
-        if ($request->hotel_id) $query->where('hotel_id', $request->hotel_id);
-        if ($request->status)   $query->where('status', $request->status);
-        if ($request->year)     $query->whereYear('tgl_checkin', $request->year);
+        if ($request->hotel_key) $query->where('hotel_key', $request->hotel_key);
+        if ($request->status) {
+            $isCancelled = $request->status === 'cancelled' ? 'Yes' : 'No';
+            $query->where('is_cancelled', $isCancelled);
+        }
 
-        $bookings  = $query->limit(100)->get();
-        $hotels    = Hotel::all();
-        $year      = $request->year ?? now()->year;
+        $bookings = $query->limit(100)->get();
+        $hotels   = Hotel::all();
+        $year     = $request->year ?? now()->year;
 
-        $pdf = Pdf::loadView('admin.exports.pdf-bookings', compact('bookings','hotels','year'))
+        $pdf = Pdf::loadView('admin.exports.pdf-bookings', compact('bookings', 'hotels', 'year'))
                 ->setPaper('a4', 'landscape')
                 ->setOptions(['defaultFont' => 'sans-serif']);
 
@@ -64,28 +73,29 @@ class ExportController extends Controller
     public function pdfOccupancy(Request $request)
     {
         $year   = $request->year ?? now()->year;
-        $today  = today();
-        $hotels = Hotel::where('is_active', true)->get()->map(function ($hotel) use ($today, $year) {
-            $terisi  = Booking::where('hotel_id', $hotel->id)
-                        ->whereIn('status', ['confirmed','completed'])
-                        ->whereDate('tgl_checkin', '<=', $today)
-                        ->whereDate('tgl_checkout', '>=', $today)
-                        ->count();
-            $rate    = $hotel->kapasitas_total > 0
-                       ? round(($terisi / $hotel->kapasitas_total) * 100, 1) : 0;
-            $revenue = Booking::where('hotel_id', $hotel->id)
-                        ->whereIn('status', ['confirmed','completed'])
-                        ->whereYear('tgl_checkin', $year)
-                        ->sum('total_bayar');
+        $hotels = Hotel::all()->map(function ($hotel) use ($year) {
+            $totalKamar = \App\Models\Room::where('hotel_key', $hotel->hotel_key)->count();
+            $terisi     = Booking::where('hotel_key', $hotel->hotel_key)
+                            ->where('is_cancelled', 'No')
+                            ->count();
+            $rate       = $totalKamar > 0
+                           ? round(($terisi / $totalKamar) * 100, 1) : 0;
+            $revenue    = Booking::where('hotel_key', $hotel->hotel_key)
+                            ->where('is_cancelled', 'No')
+                            ->sum('room_revenue');
 
             return array_merge($hotel->toArray(), [
-                'terisi'  => $terisi,
-                'rate'    => $rate,
-                'revenue' => $revenue,
+                'nama'            => $hotel->nama,
+                'tipe'            => $hotel->tipe,
+                'kota'            => $hotel->kota,
+                'kapasitas_total' => $totalKamar,
+                'terisi'          => $terisi,
+                'rate'            => $rate,
+                'revenue'         => $revenue,
             ]);
         });
 
-        $pdf = Pdf::loadView('admin.exports.pdf-occupancy', compact('hotels','year'))
+        $pdf = Pdf::loadView('admin.exports.pdf-occupancy', compact('hotels', 'year'))
                 ->setPaper('a4', 'portrait');
 
         return $pdf->download('laporan_okupansi_' . $year . '.pdf');
@@ -93,7 +103,7 @@ class ExportController extends Controller
 
     public function pdfCustomers()
     {
-        $customers = Customer::orderByDesc('total_spending')->limit(50)->get();
+        $customers = Customer::orderByDesc('guest_key')->limit(50)->get();
         $pdf = Pdf::loadView('admin.exports.pdf-customers', compact('customers'))
                 ->setPaper('a4', 'portrait');
 

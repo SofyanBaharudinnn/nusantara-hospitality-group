@@ -25,12 +25,15 @@
 
 {{-- ── HERO ── --}}
 <section style="min-height:100vh;display:flex;align-items:center;padding-top:80px;position:relative;overflow:hidden;">
+  
+
+
   <div class="orb orb-purple" style="width:600px;height:600px;top:-100px;right:-100px;opacity:0.5;"></div>
   <div class="orb orb-pink"   style="width:400px;height:400px;bottom:-50px;left:-100px;opacity:0.4;"></div>
   <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(124,58,237,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;"></div>
 
   <div class="container z1">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+    <div class="landing-hero-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
       <div>
         <div class="badge badge-purple animate-fade-up" style="margin-bottom:1.5rem;">
           <span style="width:6px;height:6px;background:var(--purple-glow);border-radius:50%;display:inline-block;"></span>
@@ -47,7 +50,7 @@
           <a href="{{ route('register') }}" class="btn btn-primary btn-lg">🚀 Mulai Sekarang</a>
           <a href="#fitur" onclick="smoothScroll('#fitur')" class="btn btn-outline btn-lg">Lihat Fitur ↓</a>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3rem;" class="animate-fade-up delay-4">
+        <div class="grid-responsive-3 animate-fade-up delay-4" style="margin-top:3rem;">
           <div style="text-align:center;">
             <div style="font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--purple-light);">3+</div>
             <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">Properti</div>
@@ -71,7 +74,7 @@
             <div style="width:10px;height:10px;border-radius:50%;background:#22c55e;"></div>
             <span style="font-size:0.75rem;color:var(--text-muted);margin-left:8px;">Nusantara Hospitality Group</span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1rem;">
+          <div class="grid-responsive-3" style="margin-bottom:1rem;">
             <div style="background:rgba(124,58,237,0.1);border:1px solid var(--border-subtle);border-radius:10px;padding:0.75rem;">
               <div style="font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;">Okupansi</div>
               <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--purple-light);">87%</div>
@@ -127,7 +130,7 @@
         Dari Reservation System Hingga Analitik Mendalam — Semuanya Terhubung.
       </p>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;">
+    <div class="grid-responsive-3">
       @foreach([
         ['🏨','Ocupancy Tracker','Pantau tingkat hunian hotel, resort, dan restoran secara real-time dengan visualisasi intuitif.'],
         ['👥','Customer Behavior','Analisis pola tamu, preferensi, dan histori kunjungan dari data CRM dan sistem reservasi.'],
@@ -151,7 +154,7 @@
 {{-- ── DATA ── --}}
 <section id="data" style="padding:5rem 0;">
   <div class="container z1">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+    <div class="landing-data-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
       <div>
         <div class="badge badge-purple" style="margin-bottom:1rem;">Integrasi Data</div>
         <h2 class="section-title" style="margin-bottom:1rem;">
@@ -209,8 +212,8 @@
       <h2 class="section-title" style="margin-bottom:1rem;">Desain <span class="gradient-text">Star Schema</span></h2>
       <p class="section-subtitle" style="margin:0 auto;">Arsitektur Fact & Dimension Table Untuk Analitik Hospitality yang Efisien.</p>
     </div>
-    <div class="glass-card" style="padding:2.5rem;overflow:hidden;">
-      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;align-items:center;">
+    <div class="glass-card table-responsive" style="padding:2.5rem;">
+      <div class="grid-responsive-5" style="min-width: 800px; align-items:center;">
         @foreach([
           ['DIM_DATE','#a855f7',['date_id (PK)','tanggal','bulan','kuartal','tahun','musim']],
           ['DIM_HOTEL','#22d3ee',['hotel_id (PK)','nama_hotel','tipe','kota','bintang']],
@@ -241,7 +244,7 @@
 {{-- ── ABOUT ── --}}
 <section id="about" style="padding:5rem 0;">
   <div class="container z1">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+    <div class="landing-about-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
 
       {{-- Kiri: Info --}}
       <div>
@@ -261,7 +264,7 @@
         </p>
 
         {{-- Stats About --}}
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;">
+        <div class="grid-responsive-2">
           @foreach([
             ['🏨','3+','Properti aktif','hotel, resort & restoran'],
             ['👥','12K+','Tamu terdaftar','di seluruh Indonesia'],
@@ -324,7 +327,7 @@
     </div>
 
     {{-- Location Cards --}}
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:2rem;">
+    <div class="grid-responsive-3" style="margin-bottom:2rem;">
       @foreach([
         ['🏨','NHG Jakarta','Hotel Bintang 5','Jl. Sudirman No. 1','Jakarta Pusat, DKI Jakarta','021-5551234','jakarta@nhg.com','-6.2088,106.8456','#a855f7'],
         ['🌴','NHG Bali Resort','Resort Bintang 5','Jl. Pantai Kuta No. 88','Badung, Bali','0361-5559876','bali@nhg.com','-8.7182,115.1686','#ec4899'],
@@ -419,7 +422,7 @@
 {{-- ── FOOTER ── --}}
 <footer style="border-top:1px solid var(--border-subtle);padding:3rem 0 2rem;">
   <div class="container z1">
-    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem;margin-bottom:2.5rem;flex-wrap:wrap;">
+    <div class="landing-footer-grid" style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2rem;margin-bottom:2.5rem;flex-wrap:wrap;">
 
       {{-- Brand --}}
       <div>
@@ -491,7 +494,7 @@
 @push('scripts')
 <script>
 // ── Navbar scroll ──
-window.addEventListener('scroll', () => {
+window.addEventListener('scroll', function() {
   document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
 });
 
@@ -508,8 +511,8 @@ function smoothScroll(target) {
 
 // ── Map Switcher ──
 function showMap(loc) {
-  document.querySelectorAll('.map-frame').forEach(f => f.style.display = 'none');
-  document.querySelectorAll('.map-btn').forEach(b => {
+  document.querySelectorAll('.map-frame').forEach(function(f){ f.style.display = 'none'; });
+  document.querySelectorAll('.map-btn').forEach(function(b) {
     b.className = 'btn btn-outline btn-sm map-btn';
     b.style.fontSize = '0.75rem';
   });

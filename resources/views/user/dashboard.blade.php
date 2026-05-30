@@ -10,12 +10,12 @@
     Selamat datang, <span style="background:linear-gradient(135deg,var(--purple-light),var(--accent-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">{{ Auth::user()->name }}</span> 👋
   </div>
   <div style="font-size:0.83rem;color:var(--text-muted);">
-    {{ now()->isoFormat('dddd, D MMMM YYYY') }} · Data diperbarui secara real-time
+    {{ $summary['display_date'] }} · Data diperbarui secara real-time
   </div>
 </div>
 
 {{-- ── 4 Stat Cards ── --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:1.5rem;">
+<div class="grid-responsive-4" style="margin-bottom:2rem;">
 
   <div class="stat-card animate-fade-up">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;">
@@ -42,7 +42,7 @@
       Rp {{ number_format($summary['revenue_mtd'] / 1000000, 1, ',', '.') }}Jt
     </div>
     <div style="font-size:0.78rem;color:var(--text-muted);margin-top:6px;">
-      {{ now()->isoFormat('MMMM YYYY') }}
+      {{ $summary['display_month'] }}
     </div>
   </div>
 
@@ -67,7 +67,7 @@
 </div>
 
 {{-- ── Row: Chart Area + Donut ── --}}
-<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+<div class="grid-aside" style="margin-bottom:2rem;">
 
   {{-- Chart 7 hari --}}
   <div class="chart-wrap animate-fade-up delay-2">
@@ -111,7 +111,7 @@
 </div>
 
 {{-- ── Row: Top Properti + Reservasi Terbaru ── --}}
-<div style="display:grid;grid-template-columns:1fr 2fr;gap:1.25rem;margin-bottom:1.25rem;">
+<div class="grid-aside-rev" style="margin-bottom:1.25rem;">
 
   {{-- Top 3 Properti --}}
   <div class="chart-wrap animate-fade-up delay-3">
@@ -167,7 +167,7 @@
             <td style="color:var(--purple-light);font-weight:600;font-size:0.82rem;">{{ $b->kode_booking }}</td>
             <td style="color:var(--text-primary);font-weight:500;">{{ $b->customer->nama ?? '-' }}</td>
             <td style="color:var(--text-secondary);">{{ $b->hotel->nama ?? '-' }}</td>
-            <td style="color:var(--text-muted);font-size:0.82rem;">{{ $b->tgl_checkin->format('d M Y') }}</td>
+            <td style="color:var(--text-muted);font-size:0.82rem;">{{ $b->dimTime ? \Carbon\Carbon::parse($b->dimTime->date)->isoFormat('D MMM YYYY') : 'N/A' }}</td>
             <td>
               @if($b->status === 'confirmed')
                 <span class="badge badge-success" style="font-size:0.65rem;">✓ Confirmed</span>
@@ -193,6 +193,9 @@
 </div>
 
 @push('scripts')
+@php
+  $statusDonutData = [$bookingStatusDist['confirmed'], $bookingStatusDist['completed'], $bookingStatusDist['pending'], $bookingStatusDist['cancelled']];
+@endphp
 <script>
 // ── Chart 7 hari ──
 new Chart(document.getElementById('weekChart').getContext('2d'), {
@@ -222,13 +225,13 @@ new Chart(document.getElementById('weekChart').getContext('2d'), {
         backgroundColor: 'rgba(17,14,31,0.95)',
         borderColor: 'rgba(124,58,237,0.3)',
         borderWidth: 1,
-        callbacks: { label: ctx => ' ' + ctx.parsed.y + '%' }
+        callbacks: { label: function(ctx){ return ' ' + ctx.parsed.y + '%'; } }
       }
     },
     scales: {
       x: { ticks: { color: '#5e5678', font: { size: 11 } }, grid: { color: 'rgba(124,58,237,0.08)' } },
       y: {
-        ticks: { color: '#5e5678', callback: v => v + '%', font: { size: 11 } },
+        ticks: { color: '#5e5678', callback: function(v){ return v + '%'; }, font: { size: 11 } },
         grid: { color: 'rgba(124,58,237,0.08)' },
         min: 0, max: 100
       }
@@ -242,12 +245,7 @@ new Chart(document.getElementById('statusDonut').getContext('2d'), {
   data: {
     labels: ['Confirmed','Completed','Pending','Cancelled'],
     datasets: [{
-      data: [
-        {{ $bookingStatusDist['confirmed'] }},
-        {{ $bookingStatusDist['completed'] }},
-        {{ $bookingStatusDist['pending'] }},
-        {{ $bookingStatusDist['cancelled'] }}
-      ],
+      data: @json($statusDonutData),
       backgroundColor: ['#4ade80','#a855f7','#fbbf24','#f87171'],
       borderWidth: 0,
       hoverOffset: 6,

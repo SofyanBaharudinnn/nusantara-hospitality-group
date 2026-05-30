@@ -94,10 +94,10 @@
             </span>
           </td>
           <td style="font-size:0.82rem;color:var(--text-secondary);">
-            {{ $b->tgl_checkin->format('d M Y') }}
+            {{ $b->tgl_checkin ? $b->tgl_checkin->format('d M Y') : 'N/A' }}
           </td>
           <td style="font-size:0.82rem;color:var(--text-secondary);">
-            {{ $b->tgl_checkout->format('d M Y') }}
+            {{ $b->tgl_checkout ? $b->tgl_checkout->format('d M Y') : 'N/A' }}
           </td>
           <td style="text-align:center;">{{ $b->jml_malam }}</td>
           <td style="color:var(--text-primary);font-weight:600;font-size:0.85rem;">
@@ -119,13 +119,13 @@
           </td>
           <td>
             <div style="display:flex;gap:6px;">
-              <a href="{{ route('admin.bookings.show', $b->id) }}"
+              <a href="{{ route('admin.bookings.show', $b->reservation_key) }}"
                 class="btn btn-outline btn-sm"
                 style="padding:4px 10px;font-size:0.72rem;">👁️</a>
-              <a href="{{ route('admin.bookings.edit', $b->id) }}"
+              <a href="{{ route('admin.bookings.edit', $b->reservation_key) }}"
                 class="btn btn-outline btn-sm"
                 style="padding:4px 10px;font-size:0.72rem;color:#fbbf24;border-color:rgba(251,191,36,0.3);">✏️</a>
-              <form method="POST" action="{{ route('admin.bookings.destroy', $b->id) }}"
+              <form method="POST" action="{{ route('admin.bookings.destroy', $b->reservation_key) }}"
                 onsubmit="return confirm('Hapus booking {{ $b->kode_booking }}?')">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn btn-outline btn-sm"

@@ -4,40 +4,34 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
-use App\Models\Hotel;
-use Carbon\Carbon;
+use App\Models\DimTime;
+use App\Models\Room;
 
 class TrendController extends Controller
 {
     public function index()
     {
-        $totalKamar = Hotel::sum('kapasitas_total');
-        $year       = now()->year;
-        $monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+        $totalKamar  = Room::count();
+        $year        = 2024;
+        $monthNames  = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
 
-        $occupancyData   = [];
+        $occupancyData    = [];
         $bookingCountData = [];
         $revenueData      = [];
         $monthTable       = [];
 
         for ($m = 1; $m <= 12; $m++) {
-            $start = Carbon::create($year, $m, 1)->startOfMonth();
-            $end   = $start->copy()->endOfMonth();
+            $keys = DimTime::keysForMonth($year, $m);
 
-            $booked = Booking::whereIn('status', ['confirmed', 'completed'])
-                        ->whereDate('tgl_checkin', '<=', $end)
-                        ->whereDate('tgl_checkout', '>=', $start)
+            $booked = Booking::where('is_cancelled', 'No')
+                        ->whereIn('date_key', $keys)
                         ->count();
 
-            $bookingCount = Booking::whereIn('status', ['confirmed', 'completed', 'pending'])
-                        ->whereYear('tgl_checkin', $year)
-                        ->whereMonth('tgl_checkin', $m)
-                        ->count();
+            $bookingCount = Booking::whereIn('date_key', $keys)->count();
 
-            $revenue = Booking::whereIn('status', ['confirmed', 'completed'])
-                        ->whereYear('tgl_checkin', $year)
-                        ->whereMonth('tgl_checkin', $m)
-                        ->sum('total_bayar');
+            $revenue = Booking::where('is_cancelled', 'No')
+                        ->whereIn('date_key', $keys)
+                        ->sum('room_revenue');
 
             $occ = $totalKamar > 0 ? round(($booked / $totalKamar) * 100, 1) : 0;
 
@@ -68,29 +62,25 @@ class TrendController extends Controller
 
         // ── Seasons Summary ──
         $seasons = [
-            ['name' => 'Low Season',      'months' => 'Jan — Feb',      'avg' => round(($occupancyData[0]  + $occupancyData[1])  / 2, 1) . '%', 'color' => '#f87171'],
-            ['name' => 'Shoulder Season', 'months' => 'Mar — Mei, Sep', 'avg' => round(($occupancyData[2]  + $occupancyData[4] + $occupancyData[8]) / 3, 1) . '%', 'color' => '#fbbf24'],
-            ['name' => 'Peak Season',     'months' => 'Jun — Agt, Okt', 'avg' => round(($occupancyData[5]  + $occupancyData[6] + $occupancyData[7] + $occupancyData[9]) / 4, 1) . '%', 'color' => '#4ade80'],
+            ['name' => 'Low Season',      'months' => 'Jan — Feb',      'avg' => round(($occupancyData[0] + $occupancyData[1]) / 2, 1) . '%',                                                   'color' => '#f87171'],
+            ['name' => 'Shoulder Season', 'months' => 'Mar — Mei, Sep', 'avg' => round(($occupancyData[2] + $occupancyData[4] + $occupancyData[8]) / 3, 1) . '%',                              'color' => '#fbbf24'],
+            ['name' => 'Peak Season',     'months' => 'Jun — Agt, Okt', 'avg' => round(($occupancyData[5] + $occupancyData[6] + $occupancyData[7] + $occupancyData[9]) / 4, 1) . '%',         'color' => '#4ade80'],
         ];
 
         // ── Kuartal ──
         $quarterDefs = [[1,3],[4,6],[7,9],[10,12]];
-        $quarters = [];
+        $quarters    = [];
         foreach ($quarterDefs as $i => [$from, $to]) {
             $qRevenue = 0;
             $qCount   = 0;
             $qOccSum  = 0;
 
             for ($m = $from; $m <= $to; $m++) {
-                $qRevenue += Booking::whereIn('status', ['confirmed', 'completed'])
-                    ->whereYear('tgl_checkin', $year)
-                    ->whereMonth('tgl_checkin', $m)
-                    ->sum('total_bayar');
-                $qCount += Booking::whereIn('status', ['confirmed', 'completed', 'pending'])
-                    ->whereYear('tgl_checkin', $year)
-                    ->whereMonth('tgl_checkin', $m)
-                    ->count();
-                $qOccSum += $occupancyData[$m - 1];
+                $keys = DimTime::keysForMonth($year, $m);
+                $qRevenue += Booking::where('is_cancelled', 'No')
+                                ->whereIn('date_key', $keys)->sum('room_revenue');
+                $qCount   += Booking::whereIn('date_key', $keys)->count();
+                $qOccSum  += $occupancyData[$m - 1];
             }
 
             $quarters[] = [
@@ -104,10 +94,10 @@ class TrendController extends Controller
         }
 
         // ── Insight: best & worst month ──
-        $maxOcc    = max($occupancyData);
-        $minOcc    = min($occupancyData);
-        $bestIdx   = array_search($maxOcc, $occupancyData);
-        $worstIdx  = array_search($minOcc, $occupancyData);
+        $maxOcc   = max($occupancyData);
+        $minOcc   = min($occupancyData);
+        $bestIdx  = array_search($maxOcc, $occupancyData);
+        $worstIdx = array_search($minOcc, $occupancyData);
 
         $insight = [
             'best_month'  => $monthNames[$bestIdx]  . ' (' . $maxOcc . '%)',

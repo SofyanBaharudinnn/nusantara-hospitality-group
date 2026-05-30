@@ -102,5 +102,7 @@ Route::middleware(['auth', 'role:user,admin'])
     ->group(function () {
         Route::get('/dashboard', [UserDashboard::class, 'index'])->name('dashboard');
         Route::get('/occupancy', [UserOccupancy::class, 'index'])->name('occupancy');
+        Route::get('/hotels',    [\App\Http\Controllers\User\HotelController::class, 'index'])->name('hotels');
+        Route::get('/demographics', [\App\Http\Controllers\User\DemographicController::class, 'index'])->name('demographics');
         Route::get('/trends',    [UserTrend::class,     'index'])->name('trends');
     });

@@ -12,7 +12,11 @@ class HotelCrudController extends Controller
 {
     public function index()
     {
-        $hotels = Hotel::withCount(['rooms','bookings'])->latest()->get();
+        $hotels = Hotel::all()->map(function ($hotel) {
+            $hotel->rooms_count    = Room::where('hotel_key', $hotel->hotel_key)->count();
+            $hotel->bookings_count = Booking::where('hotel_key', $hotel->hotel_key)->count();
+            return $hotel;
+        });
         return view('admin.hotels.index', compact('hotels'));
     }
 
@@ -24,18 +28,13 @@ class HotelCrudController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama'            => 'required|string|max:255',
-            'tipe'            => 'required|in:hotel,resort,restoran',
-            'kota'            => 'required|string|max:100',
-            'provinsi'        => 'required|string|max:100',
-            'bintang'         => 'required|integer|min:1|max:5',
-            'kapasitas_total' => 'required|integer|min:1',
-            'alamat'          => 'nullable|string',
-            'telepon'         => 'nullable|string|max:20',
-            'email'           => 'nullable|email|max:100',
+            'hotel_name'  => 'required|string|max:255',
+            'hotel_type'  => 'required|string|max:100',
+            'city'        => 'required|string|max:100',
+            'star_rating' => 'required|integer|min:1|max:5',
         ]);
 
-        Hotel::create($request->all());
+        Hotel::create($request->only(['hotel_id', 'hotel_name', 'hotel_type', 'city', 'star_rating']));
 
         return redirect()->route('admin.hotels.index')
             ->with('success', 'Hotel berhasil ditambahkan!');
@@ -43,12 +42,13 @@ class HotelCrudController extends Controller
 
     public function show(Hotel $hotel)
     {
-        $hotel->loadCount(['rooms','bookings']);
-        $recentBookings = Booking::where('hotel_id', $hotel->id)
-                            ->with(['customer','room','channel'])
-                            ->latest()->limit(10)->get();
-        $rooms = Room::where('hotel_id', $hotel->id)->get();
-        return view('admin.hotels.show', compact('hotel','recentBookings','rooms'));
+        $recentBookings = Booking::where('hotel_key', $hotel->hotel_key)
+                            ->with(['customer', 'room', 'channel'])
+                            ->latest('reservation_key')
+                            ->limit(10)
+                            ->get();
+        $rooms = Room::where('hotel_key', $hotel->hotel_key)->get();
+        return view('admin.hotels.show', compact('hotel', 'recentBookings', 'rooms'));
     }
 
     public function edit(Hotel $hotel)
@@ -59,19 +59,13 @@ class HotelCrudController extends Controller
     public function update(Request $request, Hotel $hotel)
     {
         $request->validate([
-            'nama'            => 'required|string|max:255',
-            'tipe'            => 'required|in:hotel,resort,restoran',
-            'kota'            => 'required|string|max:100',
-            'provinsi'        => 'required|string|max:100',
-            'bintang'         => 'required|integer|min:1|max:5',
-            'kapasitas_total' => 'required|integer|min:1',
-            'alamat'          => 'nullable|string',
-            'telepon'         => 'nullable|string|max:20',
-            'email'           => 'nullable|email|max:100',
-            'is_active'       => 'boolean',
+            'hotel_name'  => 'required|string|max:255',
+            'hotel_type'  => 'required|string|max:100',
+            'city'        => 'required|string|max:100',
+            'star_rating' => 'required|integer|min:1|max:5',
         ]);
 
-        $hotel->update($request->all());
+        $hotel->update($request->only(['hotel_name', 'hotel_type', 'city', 'star_rating']));
 
         return redirect()->route('admin.hotels.index')
             ->with('success', 'Hotel berhasil diperbarui!');

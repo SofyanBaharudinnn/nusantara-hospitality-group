@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Channel;
 use App\Models\Customer;
+use App\Models\DimTime;
 use App\Models\Hotel;
 use App\Models\Room;
 use Illuminate\Http\Request;
@@ -14,142 +15,112 @@ class BookingCrudController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Booking::with(['hotel','room','customer','channel'])->latest();
+        $query = Booking::with(['hotel', 'room', 'customer', 'channel', 'dimTime'])
+                        ->latest('reservation_key');
 
         if ($request->filled('hotel_id'))
-            $query->where('hotel_id', $request->hotel_id);
+            $query->where('hotel_key', $request->hotel_id);
 
-        if ($request->filled('status'))
-            $query->where('status', $request->status);
+        if ($request->filled('status')) {
+            $isCancelled = $request->status === 'cancelled' ? 'Yes' : 'No';
+            $query->where('is_cancelled', $isCancelled);
+        }
 
-        if ($request->filled('search'))
-            $query->whereHas('customer', fn($q) =>
-                $q->where('nama', 'like', '%'.$request->search.'%')
-            )->orWhere('kode_booking', 'like', '%'.$request->search.'%');
+        if ($request->filled('search')) {
+            $guestKeys = Customer::where('guest_name', 'like', '%'.$request->search.'%')
+                            ->pluck('guest_key');
+            $query->whereIn('guest_key', $guestKeys);
+        }
 
-        $bookings  = $query->paginate(15)->withQueryString();
-        $hotels    = Hotel::where('is_active', true)->get();
-        $statuses  = ['confirmed','pending','cancelled','completed'];
+        $bookings = $query->paginate(15)->withQueryString();
+        $hotels   = Hotel::all();
+        $statuses = ['confirmed', 'cancelled'];
 
-        return view('admin.bookings.index', compact('bookings','hotels','statuses'));
+        return view('admin.bookings.index', compact('bookings', 'hotels', 'statuses'));
     }
 
     public function create()
     {
-        $hotels    = Hotel::where('is_active', true)->get();
-        $customers = Customer::orderBy('nama')->get();
-        $channels  = Channel::where('is_active', true)->get();
+        $hotels    = Hotel::all();
+        $customers = Customer::orderBy('guest_name')->get();
+        $channels  = Channel::all();
         $rooms     = collect();
 
-        return view('admin.bookings.create', compact('hotels','customers','channels','rooms'));
+        return view('admin.bookings.create', compact('hotels', 'customers', 'channels', 'rooms'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'hotel_id'       => 'required|exists:hotels,id',
-            'room_id'        => 'required|exists:rooms,id',
-            'customer_id'    => 'required|exists:customers,id',
-            'channel_id'     => 'required|exists:channels,id',
-            'tgl_checkin'    => 'required|date',
-            'tgl_checkout'   => 'required|date|after:tgl_checkin',
-            'jml_tamu'       => 'required|integer|min:1',
-            'status'         => 'required|in:confirmed,pending,cancelled,completed',
-            'diskon'         => 'nullable|numeric|min:0',
-            'catatan'        => 'nullable|string',
+            'hotel_key'    => 'required|exists:dim_hotel,hotel_key',
+            'room_key'     => 'required|exists:dim_room,room_key',
+            'guest_key'    => 'required|exists:dim_guest,guest_key',
+            'channel_key'  => 'required|exists:dim_booking_channel,channel_key',
+            'date_key'     => 'required|integer',
+            'nights'       => 'required|integer|min:1',
+            'rooms_booked' => 'required|integer|min:1',
         ]);
 
-        $room      = Room::findOrFail($request->room_id);
-        $checkin   = \Carbon\Carbon::parse($request->tgl_checkin);
-        $checkout  = \Carbon\Carbon::parse($request->tgl_checkout);
-        $nights    = $checkin->diffInDays($checkout);
-        $harga     = $room->harga_dasar;
-        $diskon    = $request->diskon ?? 0;
-        $total     = ($harga * $nights) - $diskon;
+        $room    = Room::findOrFail($request->room_key);
+        $revenue = $room->base_rate * $request->nights;
 
         Booking::create([
-            'kode_booking'    => Booking::generateKode(),
-            'hotel_id'        => $request->hotel_id,
-            'room_id'         => $request->room_id,
-            'customer_id'     => $request->customer_id,
-            'channel_id'      => $request->channel_id,
-            'tgl_checkin'     => $request->tgl_checkin,
-            'tgl_checkout'    => $request->tgl_checkout,
-            'jml_malam'       => $nights,
-            'jml_tamu'        => $request->jml_tamu,
-            'harga_per_malam' => $harga,
-            'total_bayar'     => $total,
-            'diskon'          => $diskon,
-            'status'          => $request->status,
-            'catatan'         => $request->catatan,
+            'hotel_key'    => $request->hotel_key,
+            'room_key'     => $request->room_key,
+            'guest_key'    => $request->guest_key,
+            'channel_key'  => $request->channel_key,
+            'date_key'     => $request->date_key,
+            'nights'       => $request->nights,
+            'rooms_booked' => $request->rooms_booked,
+            'room_revenue' => $revenue,
+            'is_cancelled' => 'No',
         ]);
 
         return redirect()->route('admin.bookings.index')
-            ->with('success', 'Booking berhasil ditambahkan!');
+            ->with('success', 'Reservasi berhasil ditambahkan!');
     }
 
     public function show(Booking $booking)
     {
-        $booking->load(['hotel','room','customer','channel']);
+        $booking->load(['hotel', 'room', 'customer', 'channel', 'dimTime']);
         return view('admin.bookings.show', compact('booking'));
     }
 
     public function edit(Booking $booking)
     {
-        $hotels    = Hotel::where('is_active', true)->get();
-        $customers = Customer::orderBy('nama')->get();
-        $channels  = Channel::where('is_active', true)->get();
-        $rooms     = Room::where('hotel_id', $booking->hotel_id)->get();
-        return view('admin.bookings.edit', compact('booking','hotels','customers','channels','rooms'));
+        $hotels    = Hotel::all();
+        $customers = Customer::orderBy('guest_name')->get();
+        $channels  = Channel::all();
+        $rooms     = Room::where('hotel_key', $booking->hotel_key)->get();
+        return view('admin.bookings.edit', compact('booking', 'hotels', 'customers', 'channels', 'rooms'));
     }
 
     public function update(Request $request, Booking $booking)
     {
         $request->validate([
-            'hotel_id'     => 'required|exists:hotels,id',
-            'room_id'      => 'required|exists:rooms,id',
-            'customer_id'  => 'required|exists:customers,id',
-            'channel_id'   => 'required|exists:channels,id',
-            'tgl_checkin'  => 'required|date',
-            'tgl_checkout' => 'required|date|after:tgl_checkin',
-            'jml_tamu'     => 'required|integer|min:1',
-            'status'       => 'required|in:confirmed,pending,cancelled,completed',
-            'rating'       => 'nullable|integer|min:1|max:5',
-            'diskon'       => 'nullable|numeric|min:0',
-            'catatan'      => 'nullable|string',
+            'is_cancelled' => 'required|in:Yes,No',
+            'nights'       => 'required|integer|min:1',
+            'rooms_booked' => 'required|integer|min:1',
         ]);
 
-        $room    = Room::findOrFail($request->room_id);
-        $nights  = \Carbon\Carbon::parse($request->tgl_checkin)
-                    ->diffInDays(\Carbon\Carbon::parse($request->tgl_checkout));
-        $diskon  = $request->diskon ?? 0;
-        $total   = ($room->harga_dasar * $nights) - $diskon;
+        $room    = Room::find($booking->room_key);
+        $revenue = $room ? $room->base_rate * $request->nights : $booking->room_revenue;
 
         $booking->update([
-            'hotel_id'        => $request->hotel_id,
-            'room_id'         => $request->room_id,
-            'customer_id'     => $request->customer_id,
-            'channel_id'      => $request->channel_id,
-            'tgl_checkin'     => $request->tgl_checkin,
-            'tgl_checkout'    => $request->tgl_checkout,
-            'jml_malam'       => $nights,
-            'jml_tamu'        => $request->jml_tamu,
-            'harga_per_malam' => $room->harga_dasar,
-            'total_bayar'     => $total,
-            'diskon'          => $diskon,
-            'status'          => $request->status,
-            'rating'          => $request->rating,
-            'catatan'         => $request->catatan,
+            'nights'       => $request->nights,
+            'rooms_booked' => $request->rooms_booked,
+            'room_revenue' => $revenue,
+            'is_cancelled' => $request->is_cancelled,
         ]);
 
         return redirect()->route('admin.bookings.index')
-            ->with('success', 'Booking berhasil diperbarui!');
+            ->with('success', 'Reservasi berhasil diperbarui!');
     }
 
     public function destroy(Booking $booking)
     {
         $booking->delete();
         return redirect()->route('admin.bookings.index')
-            ->with('success', 'Booking berhasil dihapus!');
+            ->with('success', 'Reservasi berhasil dihapus!');
     }
 }

@@ -1,16 +1,13 @@
 @extends('layouts.dashboard')
-@section('title', 'Kelola Hotel')
-@section('page-title', '🏩 Kelola Hotel & Properti')
+@section('title', 'Katalog Properti')
+@section('page-title', '🏩 Katalog Properti')
 
 @section('content')
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
   <div style="font-size:0.875rem;color:var(--text-muted);">
-    Total {{ $hotels->count() }} properti terdaftar
+    Total {{ $hotels->count() }} properti terdaftar dalam grup Nusantara Hospitality.
   </div>
-  <a href="{{ route('admin.hotels.create') }}" class="btn btn-primary">
-    ➕ Tambah Properti
-  </a>
 </div>
 
 {{-- Stats --}}
@@ -18,7 +15,7 @@
   @foreach([
     ['Total Properti', $hotels->count(), '🏨', 'var(--purple-light)'],
     ['Total Kamar', $hotels->sum('kapasitas_total'), '🛏️', '#22d3ee'],
-    ['Aktif', $hotels->where('is_active', true)->count(), '✅', '#4ade80'],
+    ['Booking Berjalan', $hotels->sum('bookings_count'), '📋', '#4ade80'],
   ] as $s)
   <div class="stat-card animate-fade-up">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem;">
@@ -41,15 +38,12 @@
         <div style="font-size:1.5rem;">
           {{ $hotel->tipe === 'hotel' ? '🏨' : ($hotel->tipe === 'resort' ? '🌴' : '🍽️') }}
         </div>
-        <span class="badge {{ $hotel->is_active ? 'badge-success' : 'badge-danger' }}" style="font-size:0.62rem;">
-          {{ $hotel->is_active ? '● Aktif' : '● Nonaktif' }}
-        </span>
       </div>
       <div style="font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--text-primary);margin-bottom:2px;">
         {{ $hotel->nama }}
       </div>
       <div style="font-size:0.78rem;color:var(--text-muted);">
-        {{ $hotel->kota }}, {{ $hotel->provinsi }}
+        {{ $hotel->kota }}, {{ $hotel->provinsi ?? 'Indonesia' }}
       </div>
       <div style="margin-top:4px;">
         @for($i = 1; $i <= 5; $i++)
@@ -75,38 +69,16 @@
         </div>
       </div>
 
-      <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.75rem;">
+      <div style="font-size:0.75rem;color:var(--text-muted);">
         <span class="badge" style="font-size:0.62rem;background:rgba(124,58,237,0.1);color:var(--purple-glow);border:1px solid rgba(124,58,237,0.2);">
           {{ ucfirst($hotel->tipe) }}
         </span>
-        @if($hotel->telepon)
-        <span style="margin-left:6px;">📞 {{ $hotel->telepon }}</span>
-        @endif
-      </div>
-
-      <div style="display:flex;gap:6px;">
-        <a href="{{ route('admin.hotels.show', $hotel->hotel_key) }}"
-          class="btn btn-outline btn-sm" style="flex:1;justify-content:center;font-size:0.75rem;">
-          👁️ Detail
-        </a>
-        <a href="{{ route('admin.hotels.edit', $hotel->hotel_key) }}"
-          class="btn btn-outline btn-sm" style="flex:1;justify-content:center;font-size:0.75rem;color:#fbbf24;border-color:rgba(251,191,36,0.3);">
-          ✏️ Edit
-        </a>
-        <form method="POST" action="{{ route('admin.hotels.destroy', $hotel->hotel_key) }}"
-          onsubmit="return confirm('Hapus {{ $hotel->nama }}?')">
-          @csrf @method('DELETE')
-          <button type="submit" class="btn btn-outline btn-sm"
-            style="font-size:0.75rem;color:#f87171;border-color:rgba(248,113,113,0.3);padding:8px 10px;">
-            🗑️
-          </button>
-        </form>
       </div>
     </div>
   </div>
   @empty
   <div style="grid-column:span 3;text-align:center;padding:3rem;color:var(--text-muted);">
-    Belum ada properti. <a href="{{ route('admin.hotels.create') }}" style="color:var(--purple-light);">Tambah sekarang →</a>
+    Belum ada properti.
   </div>
   @endforelse
 </div>
